@@ -1,0 +1,14 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  '@clerk/shared': true
+  browser-tabs-lock: false
+  bufferutil: false
+  core-js: false
+  dtrace-provider: true
+  esbuild: true
+  utf-8-validate: false
+
+includeWorkspaceRoot: true

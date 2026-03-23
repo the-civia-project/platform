@@ -1,0 +1,45 @@
+[package]
+name = "api"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+platform-data = { path = "../packages/platform-data" }
+axum = { version = "0.8.8", features = ["multipart"] }
+axum-extra = { version = "0.12.5", features = [
+    "tracing",
+    "cookie",
+    "cookie-private",
+    "cookie-signed",
+    "typed-header",
+    "with-rejection",
+] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sqlx = { version = "0.8.6", features = [
+    "runtime-tokio-native-tls",
+    "postgres",
+    "macros",
+    "uuid",
+    "time",
+    "json",
+    "ipnet",
+    "ipnetwork",
+    "bstr",
+    "rust_decimal",
+] }
+uuid = { version = "1.23.0", features = ["v4", "serde"] }
+rand = "0.10.0"
+thiserror = "2.0.18"
+clerk-rs = { version = "0.4.2", features = ["axum"] }
+dotenvy = "0.15.7"
+jsonwebtoken = { version = "10.4.0", features = ["use_pem"] }
+reqwest = { version = "0.13.3", features = ["json", "rustls"] }
+tower-http = { version = "0.6.10", features = ["cors", "trace"] }
+rust-s3 = "0.37.1"
+mime_guess = "2.0.5"
+bytes = "1.10.1"
+isocountry = "0.3.2"

@@ -1,0 +1,15 @@
+info:
+  name: Serve avatar (public)
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{PLATFORM_API_URL}}/media/avatars/{{AVATAR_KEY}}"
+  auth: none
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

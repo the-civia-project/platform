@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "verbatimModuleSyntax": false,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "outDir": "./dist",
+    "preserveWatchOutput": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "exclude": [
+    "node_modules",
+    "src/db/procedure.ts"
+  ]
+}

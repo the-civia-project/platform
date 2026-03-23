@@ -1,0 +1,24 @@
+info:
+  name: Account avatar upload
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{PLATFORM_API_URL}}/account/avatar"
+  headers:
+    - name: Authorization
+      value: Bearer {{CLERK_SESSION_TOKEN}}
+  body:
+    type: multipart-form
+    fields:
+      - name: file
+        type: file
+        value: avatar.jpg
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

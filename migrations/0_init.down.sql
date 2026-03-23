@@ -1,0 +1,15 @@
+-- Created at Sat Mar 28 11:26:57 AM EET 2026
+
+DROP TABLE IF EXISTS account.clerk_validation;
+
+DROP TABLE IF EXISTS account.user;
+
+DROP TABLE IF EXISTS account.tag_count;
+
+DROP TYPE IF EXISTS account.ACCOUNT_TAG;
+
+DROP TYPE IF EXISTS account.VALIDATION_TYPE;
+
+DROP DOMAIN IF EXISTS public.COUNTRY_NUMERIC_CODE;
+
+DROP SCHEMA IF EXISTS account;

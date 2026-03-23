@@ -1,0 +1,28 @@
+info:
+  name: Me
+  type: http
+  seq: 1
+
+docs: |-
+  Returns the current platform user.
+
+  **Response (JSON)**
+  - `user_id`: UUID
+  - `citizen_of`: numeric ISO country codes
+  - `tag_label`, `tag_discriminator`: internal account tag
+  - `handle`: nullable `VARCHAR(64)`, includes leading `@` when set
+  - `location`, `avatar_key`, `avatar_url`
+
+http:
+  method: GET
+  url: "{{PLATFORM_API_URL}}/me"
+  headers:
+    - name: Authorization
+      value: Bearer {{CLERK_SESSION_TOKEN}}
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

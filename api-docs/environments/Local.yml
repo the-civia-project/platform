@@ -1,0 +1,17 @@
+name: Local
+variables:
+  - name: PLATFORM_API_URL
+    value: http://platform.localhost:3001
+    enabled: true
+    secret: false
+    type: text
+  - name: CLERK_SESSION_TOKEN
+    value: ""
+    enabled: true
+    secret: true
+    type: text
+  - name: AVATAR_KEY
+    value: avatars/550e8400-e29b-41d4-a716-446655440000.webp
+    enabled: true
+    secret: false
+    type: text

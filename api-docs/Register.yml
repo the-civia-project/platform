@@ -1,0 +1,38 @@
+info:
+  name: Register
+  type: http
+  seq: 2
+
+docs: |-
+  Creates the platform user for the authenticated Clerk session.
+
+  **Body**
+  - `citizen_of` (required): array of ISO 3166-1 numeric country codes (EU subset).
+  - `handle` (optional): public username stored **with** leading `@`, max **64** characters. Omit or `null` to auto-generate `@adjective.animal.number` (1–9999).
+  - `location` (optional): free-text location, max 120 characters.
+  - `avatar_key` (optional): object key from `POST /account/avatar`.
+
+http:
+  method: POST
+  url: "{{PLATFORM_API_URL}}/register"
+  headers:
+    - name: Authorization
+      value: Bearer {{CLERK_SESSION_TOKEN}}
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "citizen_of": [276],
+        "handle": "@whimsical.axolotl.42",
+        "location": null,
+        "avatar_key": null
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

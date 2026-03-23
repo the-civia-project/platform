@@ -1,0 +1,28 @@
+opencollection: 1.0.0
+
+info:
+  name: Civia Platform API
+
+docs: |-
+  Platform API for the Civia client.
+
+  **Handles:** stored with a leading `@`, max **64** characters total (`VARCHAR(64)`).
+  Registration accepts an optional handle or auto-generates `@adjective.animal.number`.
+
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
