@@ -1,6 +1,6 @@
-use crate::db::database::{country_display_name, CountryNumericCode, Database};
+use crate::db::database::{CountryNumericCode, Database, country_display_name};
 use crate::db::user::{CreateUser, User, ValidationType};
-use crate::storage::{avatar_public_url, validate_avatar_key, AvatarStore};
+use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
 use crate::validation::{is_valid_handle, is_valid_location};
 use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
@@ -14,10 +14,10 @@ use axum::{
     routing::{get, post},
 };
 use axum_extra::extract::WithRejection;
+use clerk_rs::ClerkConfiguration;
 use clerk_rs::clerk::Clerk;
 use clerk_rs::validators::authorizer::ClerkJwt;
 use clerk_rs::validators::{axum::ClerkLayer, jwks::MemoryCacheJwksProvider};
-use clerk_rs::ClerkConfiguration;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
@@ -77,6 +77,7 @@ fn dev_cors_layer() -> CorsLayer {
         "http://localhost:8081",
         "http://127.0.0.1:8081",
         "http://platform.localhost:3001",
+        "https://platform.theciviaproject.org",
     ];
 
     CorsLayer::new()
@@ -213,7 +214,9 @@ fn resolve_location(
     }
 
     let code = citizen_of.first().ok_or(StatusCode::BAD_REQUEST)?;
-    country_display_name(code.code()).map(|name| name.to_string()).ok_or(StatusCode::BAD_REQUEST)
+    country_display_name(code.code())
+        .map(|name| name.to_string())
+        .ok_or(StatusCode::BAD_REQUEST)
 }
 
 #[tracing::instrument(
@@ -317,9 +320,7 @@ async fn me(
             }))
         }
         Err(sqlx::Error::RowNotFound) => {
-            tracing::info!(
-                "GET /me: no platform account yet (client should POST /register)"
-            );
+            tracing::info!("GET /me: no platform account yet (client should POST /register)");
             Ok(Json(MeResponse { user: None }))
         }
         Err(err) => {
@@ -362,8 +363,8 @@ async fn upload_avatar(
     let file_bytes = file_bytes.ok_or(StatusCode::BAD_REQUEST)?;
     let file_name = file_name.unwrap_or_else(|| "upload.jpg".to_string());
 
-    let content_type = AvatarStore::content_type_for_filename(&file_name)
-        .ok_or(StatusCode::BAD_REQUEST)?;
+    let content_type =
+        AvatarStore::content_type_for_filename(&file_name).ok_or(StatusCode::BAD_REQUEST)?;
 
     let key = app_state
         .avatars
@@ -397,14 +398,10 @@ async fn serve_avatar(
 ) -> Result<Response, StatusCode> {
     validate_avatar_key(&key).map_err(|_| StatusCode::BAD_REQUEST)?;
 
-    let stored = app_state
-        .avatars
-        .get_avatar(&key)
-        .await
-        .map_err(|err| {
-            tracing::debug!(error = %err, "GET /media/avatars: not found or error");
-            StatusCode::NOT_FOUND
-        })?;
+    let stored = app_state.avatars.get_avatar(&key).await.map_err(|err| {
+        tracing::debug!(error = %err, "GET /media/avatars: not found or error");
+        StatusCode::NOT_FOUND
+    })?;
 
     Response::builder()
         .status(StatusCode::OK)
