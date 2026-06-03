@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO account.\"user\"\n                    (validation_type, citizen_of, handle, tag, avatar, location)\n                VALUES\n                    ($1, $2, $3, $4, $5, $6)\n                RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "account.validation_type",
+            "kind": {
+              "Enum": [
+                "CLERK"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "country_numeric_code[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "country_numeric_code",
+                  "kind": {
+                    "Domain": "Int4"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Varchar",
+        {
+          "Custom": {
+            "name": "account.account_tag",
+            "kind": {
+              "Composite": [
+                [
+                  "label",
+                  "Text"
+                ],
+                [
+                  "discriminator",
+                  "Int4"
+                ]
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "61453abce362383e9960335732990d951bb357fc1a4ef2f27bb77042d875de13"
+}

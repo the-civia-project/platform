@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                        INSERT INTO account.tag_count\n                            (label, discriminator)\n                        VALUES ($1, $2)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1cda232c7f962546cbfe7df07f2188691289ec3f0465e4d1a172c93cef44e6f8"
+}

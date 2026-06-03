@@ -1,0 +1,115 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                u.id,\n                u.validation_type as \"validation_type: ValidationType\",\n                u.citizen_of as \"citizenof: Vec<CountryNumericCode>\",\n                u.handle,\n                u.tag as \"tag: AccountTag\",\n                u.name,\n                u.avatar,\n                u.location,\n                u.created_at,\n                u.updated_at\n            FROM account.\"user\" u\n            INNER JOIN account.clerk_validation cv ON cv.id = u.id\n            WHERE cv.clerk_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "validation_type: ValidationType",
+        "type_info": {
+          "Custom": {
+            "name": "account.validation_type",
+            "kind": {
+              "Enum": [
+                "CLERK"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "citizenof: Vec<CountryNumericCode>",
+        "type_info": {
+          "Custom": {
+            "name": "country_numeric_code[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "country_numeric_code",
+                  "kind": {
+                    "Domain": "Int4"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "handle",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "tag: AccountTag",
+        "type_info": {
+          "Custom": {
+            "name": "account.account_tag",
+            "kind": {
+              "Composite": [
+                [
+                  "label",
+                  "Text"
+                ],
+                [
+                  "discriminator",
+                  "Int4"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "avatar",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "b637dfd9627e0861c59bf9f69675b51dd65b8c932fa9c457ee80c01fe763927d"
+}

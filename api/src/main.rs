@@ -44,8 +44,8 @@ async fn main() {
         Err(err) => {
             eprintln!("S3 storage connection failed: {err}");
             eprintln!();
-            eprintln!("Set S3_ENDPOINT, S3_IAM_ENDPOINT, S3_STS_ENDPOINT, and the object-storage");
-            eprintln!("user's S3_ACCESS_KEY / S3_SECRET_KEY in .env (see .env.example). Local dev:");
+            eprintln!("Set S3_ENDPOINT, S3_IAM_ENDPOINT, S3_STS_ENDPOINT, S3_ACCESS_KEY,");
+            eprintln!("S3_SECRET_KEY, and S3_AVATAR_BUCKET in .env (see .env.example). Local dev:");
             eprintln!("  docker compose up -d");
             std::process::exit(1);
         }

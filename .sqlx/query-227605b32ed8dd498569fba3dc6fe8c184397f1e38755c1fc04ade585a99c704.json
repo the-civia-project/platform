@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE account.tag_count\n                SET discriminator = discriminator + 1\n                WHERE label = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "227605b32ed8dd498569fba3dc6fe8c184397f1e38755c1fc04ade585a99c704"
+}
