@@ -4,6 +4,7 @@ import { View } from "react-native";
 import Button from "../../components/Button";
 import { TextInput } from "../../components/Input";
 import { Description } from "../../components/Typography";
+import { authEmailError } from "./auth-email";
 import { resetRootRoute } from "./auth-navigation";
 import {
   AuthLinkFooter,
@@ -20,9 +21,16 @@ export default function SignUp() {
 
   const busy = fetchStatus === "fetching";
   const fieldStack = authFieldStackStyle();
+  const emailError = authEmailError(emailAddress);
 
   const handleSubmit = async () => {
     setFormError(null);
+
+    const submitEmailError = authEmailError(emailAddress);
+    if (submitEmailError) {
+      setFormError(submitEmailError);
+      return;
+    }
 
     const { error } = await signUp.password({
       emailAddress: emailAddress.trim(),
@@ -118,6 +126,7 @@ export default function SignUp() {
           value={emailAddress}
           onChangeText={setEmailAddress}
           autoCapitalize="none"
+          error={emailError ?? undefined}
         />
         {errors.fields.emailAddress ? (
           <Description>{errors.fields.emailAddress.message}</Description>
@@ -137,7 +146,7 @@ export default function SignUp() {
       <Button
         variant="primary"
         onPress={handleSubmit}
-        disabled={busy || !emailAddress || !password}
+        disabled={busy || !emailAddress || !password || Boolean(emailError)}
       >
         {busy ? "Creating account…" : "Create account"}
       </Button>
