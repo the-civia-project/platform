@@ -42,9 +42,10 @@ async fn main() {
     let avatars = match AvatarStore::from_env().await {
         Ok(store) => store,
         Err(err) => {
-            eprintln!("MinIO connection failed: {err}");
+            eprintln!("S3 storage connection failed: {err}");
             eprintln!();
-            eprintln!("Start MinIO from the repo root:");
+            eprintln!("Set S3_ENDPOINT, S3_IAM_ENDPOINT, S3_STS_ENDPOINT, and the object-storage");
+            eprintln!("user's S3_ACCESS_KEY / S3_SECRET_KEY in .env (see .env.example). Local dev:");
             eprintln!("  docker compose up -d");
             std::process::exit(1);
         }

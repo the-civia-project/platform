@@ -30,27 +30,52 @@ pub struct StoredAvatar {
     pub bytes: Vec<u8>,
 }
 
+fn require_env(name: &str) -> Result<String, AvatarStoreError> {
+    let value = std::env::var(name)
+        .map_err(|_| AvatarStoreError::Config(format!("{name} must be set")))?;
+    let value = value.trim().to_owned();
+    if value.is_empty() {
+        return Err(AvatarStoreError::Config(format!("{name} must be set")));
+    }
+    Ok(value)
+}
+
+/// Long-lived credentials for an object-storage user (access key + secret key).
+struct S3UserCredentials {
+    access_key: String,
+    secret_key: String,
+}
+
+impl S3UserCredentials {
+    fn from_env() -> Result<Self, AvatarStoreError> {
+        Ok(Self {
+            access_key: require_env("S3_ACCESS_KEY")?,
+            secret_key: require_env("S3_SECRET_KEY")?,
+        })
+    }
+}
+
 impl AvatarStore {
     pub async fn from_env() -> Result<Self, AvatarStoreError> {
-        let endpoint =
-            std::env::var("MINIO_ENDPOINT").map_err(|_| AvatarStoreError::Config(
-                "MINIO_ENDPOINT must be set".into(),
-            ))?;
-        let access_key = std::env::var("MINIO_ACCESS_KEY").map_err(|_| {
-            AvatarStoreError::Config("MINIO_ACCESS_KEY must be set".into())
-        })?;
-        let secret_key = std::env::var("MINIO_SECRET_KEY").map_err(|_| {
-            AvatarStoreError::Config("MINIO_SECRET_KEY must be set".into())
-        })?;
-        let bucket_name = std::env::var("MINIO_BUCKET").unwrap_or_else(|_| "avatars".into());
+        let endpoint = require_env("S3_ENDPOINT")?;
+        let _iam_endpoint = require_env("S3_IAM_ENDPOINT")?;
+        let _sts_endpoint = require_env("S3_STS_ENDPOINT")?;
+        let user = S3UserCredentials::from_env()?;
+        let bucket_name = std::env::var("S3_AVATAR_BUCKET")
+            .unwrap_or_else(|_| "avatars".into())
+            .trim()
+            .to_owned();
+        if bucket_name.is_empty() {
+            return Err(AvatarStoreError::Config("S3_AVATAR_BUCKET must be set".into()));
+        }
 
         let region = Region::Custom {
             region: "us-east-1".to_owned(),
             endpoint,
         };
         let credentials = Credentials::new(
-            Some(&access_key),
-            Some(&secret_key),
+            Some(&user.access_key),
+            Some(&user.secret_key),
             None,
             None,
             None,
@@ -66,7 +91,7 @@ impl AvatarStore {
             Ok(false) => {
                 tracing::warn!(
                     %bucket_name,
-                    "avatar bucket missing — create it in MinIO (e.g. mc mb local/avatars)"
+                    "avatar bucket missing — create it in object storage (e.g. mc mb local/avatars)"
                 );
             }
             Err(err) => {

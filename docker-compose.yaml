@@ -9,8 +9,9 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql
 
-  # S3-compatible object store for avatars. Published on localhost only so a
-  # host-run API (`cargo run`) can reach it; clients never talk to MinIO directly.
+  # S3-compatible object store for avatars (local dev). The API reads S3_* from the
+  # repo root .env — point all three endpoints at http://localhost:9000. Clients never
+  # talk to MinIO directly; avatars are served via the platform API.
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
