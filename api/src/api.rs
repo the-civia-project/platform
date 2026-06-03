@@ -52,6 +52,7 @@ pub fn build_router(state: AppState, clerk: Clerk) -> Router {
         .on_response(DefaultOnResponse::new().level(Level::INFO));
 
     let public = Router::new()
+        .route("/health", get(health))
         .route("/media/avatars/{*key}", get(serve_avatar))
         .layer(DefaultBodyLimit::max(6 * 1024 * 1024));
 
@@ -383,6 +384,10 @@ async fn upload_avatar(
         avatar_key: key.clone(),
         avatar_url,
     }))
+}
+
+async fn health() -> Json<serde_json::Value> {
+    Json(json!({ "status": "ok" }))
 }
 
 #[tracing::instrument(skip(app_state), fields(%key))]
