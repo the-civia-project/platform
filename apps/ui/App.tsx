@@ -77,6 +77,7 @@ const RootStack = createNativeStackNavigator({
         path: "",
       },
       options: {
+        title: "The Civia Platform",
         header: () => null,
       },
     },
@@ -158,7 +159,7 @@ const RootStack = createNativeStackNavigator({
         path: "settings/profile",
       },
       options: {
-        title: "Profile",
+        title: "Profile settings",
       },
     },
     "settings/notifications": {
@@ -168,7 +169,7 @@ const RootStack = createNativeStackNavigator({
         path: "settings/notifications",
       },
       options: {
-        title: "Notifications",
+        title: "Notification settings",
       },
     },
     "settings/theme": {
@@ -198,6 +199,7 @@ const RootStack = createNativeStackNavigator({
         path: "auth/intro",
       },
       options: {
+        title: "Civia Introduction",
         header: () => null,
       },
     },
@@ -208,6 +210,7 @@ const RootStack = createNativeStackNavigator({
         path: "auth/sign-in",
       },
       options: {
+        title: "Sign in",
         header: () => null,
       },
     },
@@ -218,6 +221,7 @@ const RootStack = createNativeStackNavigator({
         path: "auth/sign-up",
       },
       options: {
+        title: "Sign up",
         header: () => null,
       },
     },
@@ -228,6 +232,7 @@ const RootStack = createNativeStackNavigator({
         path: "auth/complete-registration",
       },
       options: {
+        title: "Complete registration",
         header: () => null,
       },
     },
@@ -238,6 +243,7 @@ const RootStack = createNativeStackNavigator({
         path: "auth/profile-onboarding",
       },
       options: {
+        title: "Profile setup",
         header: () => null,
       },
     },
@@ -248,6 +254,7 @@ const RootStack = createNativeStackNavigator({
         path: "ui-kit",
       },
       options: {
+        title: "UI Kit",
         header: () => null,
       },
     },
@@ -256,7 +263,7 @@ const RootStack = createNativeStackNavigator({
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends StaticParamList<typeof RootStack> {}
+    interface RootParamList extends StaticParamList<typeof RootStack> { }
   }
 }
 

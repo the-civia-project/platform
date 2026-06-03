@@ -14,7 +14,7 @@ const platformApiUrl =
   process.env.PLATFORM_API_URL?.replace(/\/$/, "") ?? DEFAULT_PLATFORM_API_URL;
 
 const config: ExpoConfig = {
-  name: "ui",
+  name: "The Civia Platform",
   slug: "ui",
   scheme: "civia-platform",
   version: "0.0.1",
