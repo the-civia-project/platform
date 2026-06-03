@@ -11,7 +11,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { StatusBar } from "expo-status-bar";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import ThemePatternBackground from "./components/ThemePatternBackground";
@@ -21,6 +21,7 @@ import {
   useTheme,
 } from "./components/use-theme";
 import { rootNavigationRef } from "./core/account/auth-navigation";
+import { getPlatformApiUrl } from "./core/account/platform-api";
 import CompleteRegistration from "./core/account/CompleteRegistration";
 import { LoggedInProvider } from "./core/account/LoggedIn";
 import {
@@ -281,6 +282,18 @@ const linking = {
 function AppChrome() {
   const theme = useTheme();
   const scheme = useResolvedColorScheme();
+
+  useEffect(() => {
+    void fetch(`${getPlatformApiUrl()}/health`)
+      .then(async (res) => {
+        const json = await res.json().catch(() => null);
+        console.log("[platform-api] GET /health", res.ok ? json : { status: res.status, json });
+      })
+      .catch((err) => {
+        console.log("[platform-api] GET /health", err);
+      });
+  }, []);
+
   const navTheme = useMemo((): Theme => {
     const base = scheme === "dark" ? DarkTheme : DefaultTheme;
     return {
