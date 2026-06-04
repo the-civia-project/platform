@@ -21,6 +21,7 @@ import {
 const BASE: ResolveHeaderShapeInput = {
   banner: undefined,
   actions: undefined,
+  name: undefined,
   handle: undefined,
   flag: undefined,
   location: undefined,
@@ -38,6 +39,7 @@ describe("resolveHeaderShape", () => {
       hasBanner: false,
       hasActionsOverlay: false,
       hasActionsInline: false,
+      hasNameRow: false,
       hasHandleRow: false,
       hasFlagRow: false,
       hasBio: false,
@@ -140,6 +142,22 @@ describe("resolveHeaderShape", () => {
 
     it("stays off when flag and location are both unset", () => {
       expect(resolveHeaderShape(BASE).hasFlagRow).toBe(false);
+    });
+  });
+
+  describe("name row", () => {
+    it("flips on when name is set", () => {
+      expect(
+        resolveHeaderShape({ ...BASE, name: "Aria Popescu" }).hasNameRow,
+      ).toBe(true);
+    });
+
+    it("stays off when name is unset or blank", () => {
+      expect(resolveHeaderShape(BASE).hasNameRow).toBe(false);
+      expect(resolveHeaderShape({ ...BASE, name: "" }).hasNameRow).toBe(false);
+      expect(resolveHeaderShape({ ...BASE, name: "   " }).hasNameRow).toBe(
+        false,
+      );
     });
   });
 

@@ -49,13 +49,13 @@ export type ProfileSize = "xs" | "sm" | "md";
 export type ProfileProps = {
   /** Remote image URL displayed in the leading avatar. */
   source: string;
-  /** Display name -- full name, nickname, or username. */
-  name: string;
+  /** Display name -- full name, nickname, or username. Omitted when unknown. */
+  name?: string;
   /**
    * ISO 3166-1 alpha-2 country code (e.g. `"RO"`, `"US"`, `"GB"`). Forwarded to
    * `react-native-country-flag` lower-cased, which resolves a small PNG from FlagCDN.
    */
-  flag: string;
+  flag?: string;
   /** Optional free-form location -- where the user states they live. */
   from?: string;
   /**
@@ -162,41 +162,56 @@ export default function Profile({
   // collapses to one row -- `from`, if present, joins the flag inline rather than
   // wrapping below; if absent, the row simply drops the location segment.
   const stacked = !inline && Boolean(from);
+  const hasName = Boolean(name?.trim());
+  const hasFlag = Boolean(flag);
+  const avatarLabel = hasName ? `${name}'s avatar` : "User avatar";
 
   return (
     <View style={[styles.row, { gap: tokens.rowGap }]}>
       <Avatar
         source={source}
         size={tokens.avatar}
-        accessibilityLabel={`${name}'s avatar`}
+        accessibilityLabel={avatarLabel}
       />
       <View style={styles.text}>
         {stacked ? (
           <>
-            <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
-              {name}
-            </Text>
-            <View style={styles.metaRow}>
-              <CountryFlag
-                isoCode={flag}
-                size={tokens.flag}
-                style={flagStyle}
-              />
-              <Text style={[styles.meta, metaDynamic]} numberOfLines={1}>
-                {from}
+            {hasName ? (
+              <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
+                {name}
               </Text>
-            </View>
+            ) : null}
+            {hasFlag || from ? (
+              <View style={styles.metaRow}>
+                {hasFlag ? (
+                  <CountryFlag
+                    isoCode={flag!}
+                    size={tokens.flag}
+                    style={flagStyle}
+                  />
+                ) : null}
+                {from ? (
+                  <Text style={[styles.meta, metaDynamic]} numberOfLines={1}>
+                    {from}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
           </>
         ) : (
           <View style={styles.nameRow}>
-            <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
-              {name}
-            </Text>
-            <CountryFlag
-              isoCode={flag}
-              size={tokens.flag}
-              style={flagStyle}
-            />
+            {hasName ? (
+              <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
+                {name}
+              </Text>
+            ) : null}
+            {hasFlag ? (
+              <CountryFlag
+                isoCode={flag!}
+                size={tokens.flag}
+                style={flagStyle}
+              />
+            ) : null}
             {from ? (
               <Text style={[styles.meta, metaDynamic]} numberOfLines={1}>
                 {from}

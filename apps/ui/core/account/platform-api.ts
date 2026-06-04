@@ -17,6 +17,7 @@ export type PlatformUser = {
   tag_label: string;
   tag_discriminator: number;
   handle: string | null;
+  name: string | null;
   location: string | null;
   avatar_key: string | null;
   avatar_url: string | null;
@@ -161,6 +162,7 @@ export async function registerPlatformUser(
     tag_label: "",
     tag_discriminator: 0,
     handle: input.handle,
+    name: null,
     location: input.location,
     avatar_key: input.avatar_key,
     avatar_url: null,

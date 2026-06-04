@@ -149,6 +149,7 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: "Profile",
+        header: () => null,
       },
     },
     "settings/profile": {

@@ -56,6 +56,11 @@ export function citizenshipCountryName(code: CitizenshipNumericCode): string {
   return countryByNumeric[code]!.name;
 }
 
+/** ISO 3166-1 alpha-2 code for a stored citizenship numeric code, when supported. */
+export function citizenshipAlpha2(code: number): string | undefined {
+  return countryByNumeric[code]?.alpha2;
+}
+
 export function citizenshipSelectOptions(): SelectOption<CitizenshipNumericCode>[] {
   return SUPPORTED_COUNTRIES.map((country) => ({
     value: country.numeric as CitizenshipNumericCode,

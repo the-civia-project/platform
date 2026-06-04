@@ -18,6 +18,7 @@ describe("resolvePlatformUserAvatar", () => {
         tag_label: "x",
         tag_discriminator: 1,
         handle: "@aria.popescu",
+        name: null,
         location: "Berlin",
         avatar_key: null,
         avatar_url: null,

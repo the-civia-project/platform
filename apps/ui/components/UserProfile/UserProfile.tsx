@@ -389,13 +389,11 @@ export type UserProfileProps = {
    */
   avatar: string;
   /**
-   * The subject's display name -- full name, nickname, or handle-as-
-   * name when the product doesn't separate the two. Rendered at the
-   * top of the identity stack at 24px / 700, painted in
-   * {@link Theme.fgEmphasis} so it carries the strongest visual
-   * weight on the page.
+   * The subject's display name -- full name or nickname. When omitted,
+   * the identity stack skips the display-name line and starts at
+   * `@handle` / flag / location when those are set.
    */
-  name: string;
+  name?: string;
   /**
    * Optional username (no leading `@` -- the strip adds it). When
    * present, renders on the line below {@link UserProfileProps.name}
@@ -520,6 +518,17 @@ export type UserProfileProps = {
  */
 const AVATAR_RING_WIDTH = 4;
 const AVATAR_RING_SIZE = AVATAR_DIM_PX.xl + AVATAR_RING_WIDTH * 2;
+
+function profileAvatarLabel(name?: string, handle?: string): string {
+  const trimmedName = name?.trim();
+  if (trimmedName) {
+    return `${trimmedName}'s avatar`;
+  }
+  if (handle) {
+    return `@${handle}'s avatar`;
+  }
+  return "User avatar";
+}
 
 /**
  * Negative top margin used to lift the avatar wrapper so half of its
@@ -736,7 +745,7 @@ function UserProfileHeader({
   actions,
 }: {
   avatar: string;
-  name: string;
+  name?: string;
   handle?: string;
   flag?: string;
   location?: string;
@@ -756,6 +765,7 @@ function UserProfileHeader({
   const shape: UserProfileHeaderShape = resolveHeaderShape({
     banner,
     actions,
+    name,
     handle,
     flag,
     location,
@@ -803,7 +813,7 @@ function UserProfileHeader({
             source={avatar}
             size="xl"
             shape="round"
-            accessibilityLabel={`${name}'s avatar`}
+            accessibilityLabel={profileAvatarLabel(name, handle)}
           />
         </View>
 
@@ -851,7 +861,7 @@ function UserProfileIdentity({
   location,
   shape,
 }: {
-  name: string;
+  name?: string;
   handle?: string;
   flag?: string;
   location?: string;
@@ -861,9 +871,11 @@ function UserProfileIdentity({
 
   return (
     <View style={styles.identity}>
-      <Text style={[styles.name, { color: theme.fgEmphasis }]} numberOfLines={1}>
-        {name}
-      </Text>
+      {shape.hasNameRow && name ? (
+        <Text style={[styles.name, { color: theme.fgEmphasis }]} numberOfLines={1}>
+          {name}
+        </Text>
+      ) : null}
       {shape.hasHandleRow && handle ? (
         <View style={styles.handleRow}>
           <Code>{`@${handle}`}</Code>

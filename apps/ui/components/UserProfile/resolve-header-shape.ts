@@ -50,6 +50,11 @@ export type UserProfileHeaderShape = {
    */
   hasActionsInline: boolean;
   /**
+   * `true` when {@link UserProfileProps.name} is a non-empty string.
+   * Drives the display-name line at the top of the identity stack.
+   */
+  hasNameRow: boolean;
+  /**
    * `true` when {@link UserProfileProps.handle} is set. Drives the
    * `@handle` line inside the identity stack.
    */
@@ -105,6 +110,8 @@ export type ResolveHeaderShapeInput = {
   banner: { source: string; aspectRatio?: number } | undefined;
   /** The caller's `actions` prop. */
   actions: ReactNode | undefined | null;
+  /** The caller's `name` prop. */
+  name: string | undefined;
   /** The caller's `handle` prop. */
   handle: string | undefined;
   /** The caller's `flag` prop. */
@@ -141,6 +148,7 @@ export function resolveHeaderShape(
     hasBanner,
     hasActionsOverlay: hasBanner && hasActions,
     hasActionsInline: !hasBanner && hasActions,
+    hasNameRow: Boolean(input.name?.trim()),
     hasHandleRow: Boolean(input.handle),
     hasFlagRow: Boolean(input.flag) || Boolean(input.location),
     hasBio: Boolean(input.bio),
