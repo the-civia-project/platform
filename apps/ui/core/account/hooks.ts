@@ -63,8 +63,7 @@ export function useNeedsCompleteRegistration() {
     isLoaded &&
     !!isSignedIn &&
     platformResolved &&
-    !platformRegistered &&
-    !registering
+    !platformRegistered
   );
 }
 
@@ -77,7 +76,9 @@ export function useIsPendingPlatformSync() {
 /** Clerk has loaded — UI Kit is available (including on auth screens). */
 export function useIsUiKitRouteAvailable() {
   const { isLoaded } = useAuth();
-  return isLoaded;
+  const { registering } = useAccountContext();
+
+  return isLoaded && !registering;
 }
 
 /** Clerk has loaded and, when signed in, the initial platform `/me` check has finished. */
