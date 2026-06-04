@@ -51,3 +51,6 @@ yarn-error.*
 
 # NativeWind
 nativewind-env.d.ts
+
+# Certificates
+certificates/
