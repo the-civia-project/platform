@@ -1,5 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import {
+  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -71,6 +72,14 @@ export function AuthScreen({
           <View nativeID="clerk-captcha" style={styles.captcha} />
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+export function AuthLoading() {
+  return (
+    <View style={styles.loading}>
+      <ActivityIndicator size="large" />
     </View>
   );
 }
@@ -151,5 +160,10 @@ const styles = StyleSheet.create({
   captcha: {
     marginTop: 8,
     minHeight: 1,
+  },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

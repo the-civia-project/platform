@@ -24,9 +24,9 @@ export function authEmailError(value: string): string | null {
     return emailResult.issues[0]?.message ?? "Enter a valid email address.";
   }
 
-  if (!trimmed.includes(CLERK_TEST_EMAIL_TAG)) {
-    return AUTH_EMAIL_DEV_RESTRICTION_MESSAGE;
-  }
+  // if (!trimmed.includes(CLERK_TEST_EMAIL_TAG)) {
+  //   return AUTH_EMAIL_DEV_RESTRICTION_MESSAGE;
+  // }
 
   return null;
 }
