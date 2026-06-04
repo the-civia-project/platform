@@ -28,7 +28,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  ActivityIndicator,
   PixelRatio,
   RefreshControl,
   StyleSheet,
@@ -41,6 +40,7 @@ import {
   type ListRenderItemInfo,
   type ViewToken,
 } from "@shopify/flash-list";
+import { LoadingIndicator } from "../LoadingIndicator";
 import { useTheme } from "../use-theme";
 import { chunkMediaImages } from "./chunk-media-images";
 import { MediaGalleryTile } from "./MediaGalleryTile";
@@ -435,10 +435,9 @@ function EmptyRow({ children }: PropsWithChildren) {
 }
 
 function MediaGalleryFooter() {
-  const theme = useTheme();
   return (
     <View style={styles.footer}>
-      <ActivityIndicator color={theme.fgMuted} />
+      <LoadingIndicator />
     </View>
   );
 }

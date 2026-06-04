@@ -94,19 +94,14 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import {
   FlashList,
   type FlashListRef,
   type ListRenderItemInfo,
 } from "@shopify/flash-list";
 import { webFocusOutlineStyle } from "../../core/web-focus-outline";
+import { LoadingIndicator } from "../LoadingIndicator";
 import Post, { type PostProps } from "../Post";
 import { useTheme } from "../use-theme";
 
@@ -869,10 +864,9 @@ function EmptyRow({ children }: PropsWithChildren) {
  * {@link FlashList}'s `ListFooterComponent` for the resolution rules.
  */
 function FeedFooter() {
-  const theme = useTheme();
   return (
     <View style={styles.footer}>
-      <ActivityIndicator color={theme.fgMuted} />
+      <LoadingIndicator />
     </View>
   );
 }
@@ -899,7 +893,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   /**
-   * Footer slot housing the {@link ActivityIndicator} when it renders.
+   * Footer slot housing the {@link LoadingIndicator} when it renders.
    * The generous vertical padding keeps the spinner from hugging the
    * last post's action row, so the "more is coming" reading lands
    * cleanly. Whether the slot mounts at all is controlled by the

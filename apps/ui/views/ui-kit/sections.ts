@@ -111,6 +111,14 @@ export const kitSections: UiKitSection[] = [
       "Page, Section, Cluster, and Hero wrappers used to assemble screens.",
   },
   {
+    name: "loading-indicator",
+    category: "components",
+    initial: "L",
+    title: "Loading indicator",
+    description:
+      "Themed activity spinner for inline and full-screen waits — muted foreground from the active palette.",
+  },
+  {
     name: "cards",
     category: "components",
     initial: "C",

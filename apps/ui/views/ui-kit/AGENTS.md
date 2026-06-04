@@ -153,6 +153,7 @@ but not every component owns its screen. The current mapping:
 | `Typography.tsx` (all role helpers)     | `TypographyScreen` (foundation: `typography`) |
 | `Logo.tsx`                              | `LogoScreen` (foundation: `logo`)             |
 | `Page.tsx`, `Section.tsx`, `Cluster.tsx`, `Hero.tsx` | `LayoutScreen` (component: `layout`) |
+| `LoadingIndicator/` (`LoadingIndicator`) | `LoadingIndicatorScreen` (component: `loading-indicator`) |
 | `card/` (`Card`, `DisclosureCard`)      | `CardsScreen` (component: `cards`)            |
 | `Drawer/` (`Drawer`, `DrawerItem`)      | `DrawerScreen` (component: `drawer`)          |
 | `selection/` (`toggleStringInSelection`, …) | Used by selectable families; no standalone demo |

@@ -24,6 +24,8 @@ export type UiKitStackParamList = {
   selection: undefined;
   /** Layout wrapper examples: Page, Section, Cluster, Hero. */
   layout: undefined;
+  /** Themed LoadingIndicator — small inline and large full-screen waits. */
+  "loading-indicator": undefined;
   /** Logo size and inline-row examples. */
   logo: undefined;
   /** Avatar and Profile examples -- image tiles plus identity rows with name, flag, and location. */

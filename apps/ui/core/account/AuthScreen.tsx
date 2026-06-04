@@ -1,6 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Card } from "../../components/card/Card";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { Hero } from "../../components/Hero";
 import { Description, Strong } from "../../components/Typography";
 import { useTheme } from "../../components/use-theme";
@@ -77,11 +77,9 @@ export function AuthScreen({
 }
 
 export function AuthLoading() {
-  const theme = useTheme();
-
   return (
     <View style={styles.loading}>
-      <ActivityIndicator size="large" color={theme.fgMuted} />
+      <LoadingIndicator size="large" />
     </View>
   );
 }

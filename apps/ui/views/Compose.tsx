@@ -16,7 +16,8 @@
 import { useUser } from "@clerk/expo";
 import { useNavigation } from "@react-navigation/native";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { LoadingIndicator } from "../components/LoadingIndicator";
 import { Page } from "../components/Page";
 import {
   addPictures,
@@ -25,7 +26,6 @@ import {
   type PostDraft,
 } from "../components/PostComposer";
 import { Lede } from "../components/Typography";
-import { useTheme } from "../components/use-theme";
 import { usePlatformUser } from "../core/account/hooks";
 import { platformUserToProfileProps } from "../core/account/platform-user-profile";
 import { useDraftLinkExtraction } from "../core/composer/use-draft-link-extraction";
@@ -38,7 +38,6 @@ import { useSubmitPost } from "../core/composer/use-submit-post";
  * stack as the `compose` route.
  */
 export default function Compose() {
-  const theme = useTheme();
   const navigation = useNavigation();
   const platformUser = usePlatformUser();
   const { user } = useUser();
@@ -70,7 +69,7 @@ export default function Compose() {
     return (
       <Page>
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.fgMuted} />
+          <LoadingIndicator size="large" />
         </View>
       </Page>
     );

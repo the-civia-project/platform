@@ -15,6 +15,7 @@ import HomeScreen from "./HomeScreen";
 import IconsScreen from "./IconsScreen";
 import InputScreen from "./InputScreen";
 import LayoutScreen from "./LayoutScreen";
+import LoadingIndicatorScreen from "./LoadingIndicatorScreen";
 import LogoScreen from "./LogoScreen";
 import OnboardingFlowsScreen from "./OnboardingFlowsScreen";
 import PostComposerScreen from "./PostComposerScreen";
@@ -93,6 +94,11 @@ export default function UiKit() {
         name="layout"
         component={LayoutScreen}
         options={{ title: "Layout" }}
+      />
+      <Stack.Screen
+        name="loading-indicator"
+        component={LoadingIndicatorScreen}
+        options={{ title: "Loading indicator" }}
       />
       <Stack.Screen
         name="logo"
