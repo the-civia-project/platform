@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM account.clerk_validation\n                WHERE clerk_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e357919d9d0e3781cd391498759c828afc9afd1e4e8a92a7759867684154a3a"
+}
