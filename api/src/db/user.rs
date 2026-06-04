@@ -216,4 +216,46 @@ impl Database {
         .await
         .map(|row| row.id)
     }
+
+    pub async fn delete_user_by_clerk_id(&self, clerk_id: &str) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        let Some(row) = sqlx::query!(
+            r#"
+                SELECT id
+                FROM account.clerk_validation
+                WHERE clerk_id = $1
+            "#,
+            clerk_id
+        )
+        .fetch_optional(&mut *tx)
+        .await?
+        else {
+            tx.commit().await?;
+            return Ok(());
+        };
+
+        sqlx::query!(
+            r#"
+                DELETE FROM account.clerk_validation
+                WHERE clerk_id = $1
+            "#,
+            clerk_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        sqlx::query!(
+            r#"
+                DELETE FROM account."user"
+                WHERE id = $1
+            "#,
+            row.id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
 }

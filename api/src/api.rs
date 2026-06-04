@@ -11,10 +11,11 @@ use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::{
     Json, Router,
-    routing::{get, post},
+    routing::{delete, get, post},
 };
 use axum_extra::extract::WithRejection;
 use clerk_rs::ClerkConfiguration;
+use clerk_rs::apis::users_api::User as ClerkUsersApi;
 use clerk_rs::clerk::Clerk;
 use clerk_rs::validators::authorizer::ClerkJwt;
 use clerk_rs::validators::{axum::ClerkLayer, jwks::MemoryCacheJwksProvider};
@@ -31,14 +32,16 @@ use uuid::Uuid;
 pub struct AppState {
     pub db: Database,
     pub avatars: AvatarStore,
+    pub clerk: Clerk,
 }
 
-pub fn build_router(state: AppState, clerk: Clerk) -> Router {
+pub fn build_router(state: AppState) -> Router {
     let clerk_layer = ClerkLayer::new(
-        MemoryCacheJwksProvider::new(clerk),
+        MemoryCacheJwksProvider::new(state.clerk.clone()),
         Some(vec![
             "/register".into(),
             "/me".into(),
+            "/account".into(),
             "/account/avatar".into(),
         ]),
         false,
@@ -59,6 +62,7 @@ pub fn build_router(state: AppState, clerk: Clerk) -> Router {
     let protected = Router::new()
         .route("/register", post(register))
         .route("/me", get(me))
+        .route("/account", delete(delete_account))
         .route("/account/avatar", post(upload_avatar))
         .layer(DefaultBodyLimit::max(6 * 1024 * 1024))
         .layer(clerk_layer);
@@ -87,7 +91,7 @@ fn dev_cors_layer() -> CorsLayer {
                 .filter_map(|origin| origin.parse().ok())
                 .collect::<Vec<_>>(),
         ))
-        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
         .allow_headers([
             HeaderName::from_static("authorization"),
             HeaderName::from_static("content-type"),
@@ -95,8 +99,8 @@ fn dev_cors_layer() -> CorsLayer {
         .allow_credentials(false)
 }
 
-pub async fn start_api(state: AppState, clerk: Clerk) {
-    let app = build_router(state, clerk);
+pub async fn start_api(state: AppState) {
+    let app = build_router(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
 
@@ -327,6 +331,35 @@ async fn me(
         }
         Err(err) => {
             tracing::error!(error = %err, "GET /me: database error");
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+#[tracing::instrument(skip(app_state), fields(clerk_sub = %clerk_jwt.sub))]
+async fn delete_account(
+    State(app_state): State<AppState>,
+    Extension(clerk_jwt): Extension<ClerkJwt>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    tracing::info!(clerk_sub = %clerk_jwt.sub, "DELETE /account");
+
+    match ClerkUsersApi::delete_user(&app_state.clerk, &clerk_jwt.sub).await {
+        Ok(_) => {
+            tracing::info!(clerk_sub = %clerk_jwt.sub, "DELETE /account: clerk user removed");
+        }
+        Err(err) => {
+            tracing::error!(error = ?err, clerk_sub = %clerk_jwt.sub, "DELETE /account: clerk delete failed");
+            return Err(StatusCode::BAD_GATEWAY);
+        }
+    }
+
+    match app_state.db.delete_user_by_clerk_id(&clerk_jwt.sub).await {
+        Ok(()) => {
+            tracing::info!(clerk_sub = %clerk_jwt.sub, "DELETE /account: platform user removed");
+            Ok(Json(json!({ "message": "account deleted" })))
+        }
+        Err(err) => {
+            tracing::error!(error = %err, clerk_sub = %clerk_jwt.sub, "DELETE /account: database error");
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }

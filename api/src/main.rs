@@ -53,5 +53,5 @@ async fn main() {
 
     let clerk = clerk_from_env();
 
-    start_api(AppState { db, avatars }, clerk).await;
+    start_api(AppState { db, avatars, clerk }).await;
 }

@@ -168,3 +168,13 @@ export async function registerPlatformUser(
     avatar_url: null,
   };
 }
+
+export async function deletePlatformAccount(
+  getToken: () => Promise<string | null>,
+): Promise<void> {
+  const res = await authFetch("/account", getToken, { method: "DELETE" });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`DELETE /account failed: ${res.status} ${text}`);
+  }
+}

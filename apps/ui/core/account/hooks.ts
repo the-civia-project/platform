@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { useMemo } from "react";
 import { useAccountContext } from "./account-context";
+import { deletePlatformAccount } from "./platform-api";
 
 export function useAccountActions() {
   const { completeIntro, registerWithProfile, resetAccountState } =
@@ -99,5 +100,27 @@ export function useLogout() {
       await signOut(sessionId ? { sessionId } : undefined);
     },
     [isSignedIn, resetAccountState, sessionId, signOut],
+  );
+}
+
+export function useDeleteAccount() {
+  const { getToken, signOut, sessionId, isSignedIn } = useAuth();
+  const { resetAccountState } = useAccountActions();
+
+  return useMemo(
+    () => async () => {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("No Clerk session token");
+      }
+
+      await deletePlatformAccount(async () => token);
+      resetAccountState();
+
+      if (isSignedIn) {
+        await signOut(sessionId ? { sessionId } : undefined);
+      }
+    },
+    [getToken, isSignedIn, resetAccountState, sessionId, signOut],
   );
 }
