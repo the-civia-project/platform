@@ -6,7 +6,7 @@ use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
-use axum::http::{HeaderName, Method, StatusCode};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::{
@@ -23,7 +23,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use thiserror::Error;
-use tower_http::cors::{AllowOrigin, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 use uuid::Uuid;
@@ -47,8 +47,6 @@ pub fn build_router(state: AppState) -> Router {
         false,
     );
 
-    let cors = dev_cors_layer();
-
     let trace = TraceLayer::new_for_http()
         .make_span_with(DefaultMakeSpan::new().level(Level::DEBUG))
         .on_request(DefaultOnRequest::new().level(Level::DEBUG))
@@ -71,32 +69,8 @@ pub fn build_router(state: AppState) -> Router {
         .merge(public)
         .merge(protected)
         .layer(trace)
-        .layer(cors)
+        .layer(CorsLayer::permissive())
         .with_state(state)
-}
-
-fn dev_cors_layer() -> CorsLayer {
-    let origins = [
-        "http://civia.localhost:8081",
-        "http://localhost:8081",
-        "http://127.0.0.1:8081",
-        "http://platform.localhost:3001",
-        "https://platform.theciviaproject.org",
-    ];
-
-    CorsLayer::new()
-        .allow_origin(AllowOrigin::list(
-            origins
-                .iter()
-                .filter_map(|origin| origin.parse().ok())
-                .collect::<Vec<_>>(),
-        ))
-        .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
-        .allow_headers([
-            HeaderName::from_static("authorization"),
-            HeaderName::from_static("content-type"),
-        ])
-        .allow_credentials(false)
 }
 
 pub async fn start_api(state: AppState) {

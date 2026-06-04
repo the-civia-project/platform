@@ -62,7 +62,11 @@ async function authFetch(
     ...(init?.headers as Record<string, string> | undefined),
   };
 
-  if (!(init?.body instanceof FormData)) {
+  const hasBody =
+    init?.body != null &&
+    !(typeof init.body === "string" && init.body.length === 0);
+
+  if (!(init?.body instanceof FormData) && hasBody) {
     headers["Content-Type"] = "application/json";
   }
 
