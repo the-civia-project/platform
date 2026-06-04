@@ -5,12 +5,13 @@ use crate::validation::{is_valid_handle, is_valid_location};
 use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
-use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
 use axum::http::StatusCode;
+use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::{
     Json, Router,
+    middleware::{self, Next},
     routing::{delete, get, post},
 };
 use axum_extra::extract::WithRejection;
@@ -24,8 +25,6 @@ use serde::Serialize;
 use serde_json::json;
 use thiserror::Error;
 use tower_http::cors::CorsLayer;
-use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
-use tracing::Level;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -47,11 +46,6 @@ pub fn build_router(state: AppState) -> Router {
         false,
     );
 
-    let trace = TraceLayer::new_for_http()
-        .make_span_with(DefaultMakeSpan::new().level(Level::DEBUG))
-        .on_request(DefaultOnRequest::new().level(Level::DEBUG))
-        .on_response(DefaultOnResponse::new().level(Level::INFO));
-
     let public = Router::new()
         .route("/health", get(health))
         .route("/media/avatars/{*key}", get(serve_avatar))
@@ -68,9 +62,25 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         .merge(public)
         .merge(protected)
-        .layer(trace)
+        .layer(middleware::from_fn(log_requests))
         .layer(CorsLayer::permissive())
         .with_state(state)
+}
+
+async fn log_requests(request: axum::http::Request<Body>, next: Next) -> Response {
+    let method = request.method().clone();
+    let target = request
+        .uri()
+        .path_and_query()
+        .map(|path_and_query| path_and_query.as_str())
+        .unwrap_or_else(|| request.uri().path())
+        .to_string();
+
+    let response = next.run(request).await;
+
+    tracing::info!("{} {} {}", method, target, response.status().as_u16());
+
+    response
 }
 
 pub async fn start_api(state: AppState) {
