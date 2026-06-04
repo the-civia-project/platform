@@ -8,6 +8,7 @@
  * - **matrix** — static code-rain columns + spine lines that bridge segment and tile-row gaps.
  * - **pulse** — layered pulses: ECG, ripple arcs, **radial ring waves**, square wave, spoke burst.
  * - **ember** — soft heat waves + ember dots, sunset glow.
+ * - **default** — halftone dot grid + registration ticks, photographic B&W.
  */
 import { useId, useMemo } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
@@ -57,6 +58,7 @@ const TILE: Record<ThemeFlavor, { w: number; h: number }> = {
   matrix: { w: 48, h: 48 },
   pulse: { w: 64, h: 64 },
   ember: { w: 64, h: 64 },
+  default: { w: 64, h: 64 },
 };
 
 function resolveInk(theme: Theme, flavor: ThemeFlavor): PatternInk {
@@ -397,6 +399,69 @@ function PulseTile({ ink }: { ink: PatternInk }) {
   );
 }
 
+function DefaultTile({ ink }: { ink: PatternInk }) {
+  const dots: Array<{ cx: number; cy: number; r: number }> = [
+    { cx: 8, cy: 8, r: 1.1 },
+    { cx: 24, cy: 8, r: 0.85 },
+    { cx: 40, cy: 8, r: 1.2 },
+    { cx: 56, cy: 8, r: 0.9 },
+    { cx: 16, cy: 24, r: 0.95 },
+    { cx: 32, cy: 24, r: 1.15 },
+    { cx: 48, cy: 24, r: 0.8 },
+    { cx: 8, cy: 40, r: 0.9 },
+    { cx: 24, cy: 40, r: 1.05 },
+    { cx: 40, cy: 40, r: 0.75 },
+    { cx: 56, cy: 40, r: 1.1 },
+    { cx: 16, cy: 56, r: 1.0 },
+    { cx: 32, cy: 56, r: 0.85 },
+    { cx: 48, cy: 56, r: 1.25 },
+  ];
+
+  return (
+    <>
+      {/* Halftone field — staggered dot grid */}
+      {dots.map((d, i) => (
+        <Circle
+          key={i}
+          cx={d.cx}
+          cy={d.cy}
+          r={d.r}
+          fill={i % 3 === 0 ? ink.accent : ink.structure}
+        />
+      ))}
+      {/* Fine crosshair registration */}
+      <Line
+        x1={0}
+        y1={32}
+        x2={64}
+        y2={32}
+        stroke={ink.structure}
+        strokeWidth={0.35}
+      />
+      <Line
+        x1={32}
+        y1={0}
+        x2={32}
+        y2={64}
+        stroke={ink.structure}
+        strokeWidth={0.35}
+      />
+      <Path
+        d="M 4 4 L 4 12 M 4 4 L 12 4"
+        stroke={ink.accent}
+        strokeWidth={0.75}
+        fill="none"
+      />
+      <Path
+        d="M 60 4 L 60 12 M 60 4 L 52 4"
+        stroke={ink.accent}
+        strokeWidth={0.75}
+        fill="none"
+      />
+    </>
+  );
+}
+
 function EmberTile({ ink }: { ink: PatternInk }) {
   return (
     <>
@@ -436,6 +501,8 @@ function PatternContent({
       return <PulseTile ink={ink} />;
     case "ember":
       return <EmberTile ink={ink} />;
+    case "default":
+      return <DefaultTile ink={ink} />;
   }
 }
 

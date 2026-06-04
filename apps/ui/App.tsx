@@ -333,7 +333,7 @@ export default function App() {
   return (
     <ClerkProvider publishableKey={publishableKey!} tokenCache={tokenCache}>
       <SafeAreaProvider>
-        <ThemeFlavorProvider>
+        <ThemeFlavorProvider defaultFlavor="default">
           <GlobalLoadingProvider>
             <DataCollection>
               <FontsProvider>

@@ -48,7 +48,7 @@ const ThemeFlavorStateContext = createContext<{
 export type ThemeFlavorProviderProps = {
   /**
    * Initial {@link ThemeFlavor} before the user changes it.
-   * @defaultValue "pulse"
+   * @defaultValue "default"
    */
   defaultFlavor?: ThemeFlavor;
 };
@@ -62,7 +62,7 @@ export type ThemeFlavorProviderProps = {
  */
 export function ThemeFlavorProvider({
   children,
-  defaultFlavor = "pulse",
+  defaultFlavor = "default",
 }: PropsWithChildren<ThemeFlavorProviderProps>) {
   const [flavor, setFlavor] = useState<ThemeFlavor>(defaultFlavor);
   const value = useMemo(() => ({ flavor, setFlavor }), [flavor]);
@@ -78,7 +78,7 @@ const noopSetFlavor: Dispatch<SetStateAction<ThemeFlavor>> = () => {};
 
 /**
  * Returns the current {@link ThemeFlavor} and `setFlavor` to change it.
- * Outside {@link ThemeFlavorProvider}, reads as `"pulse"` and `setFlavor`
+ * Outside {@link ThemeFlavorProvider}, reads as `"default"` and `setFlavor`
  * is a no-op so stories and tests do not need the provider.
  *
  * @returns Current flavour and setter.
@@ -89,7 +89,7 @@ export function useThemeFlavor(): {
 } {
   const ctx = useContext(ThemeFlavorStateContext);
   if (!ctx) {
-    return { flavor: "pulse", setFlavor: noopSetFlavor };
+    return { flavor: "default", setFlavor: noopSetFlavor };
   }
   return ctx;
 }

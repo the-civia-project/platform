@@ -12,7 +12,8 @@
  * and dark {@link Theme} bags:
  * - **gazette** — warm cream / walnut editorial civic palette.
  * - **matrix** — phosphor lime on deep green-black; light "terminal paper".
- * - **pulse** — electric violet on cool gray-violet neutrals (social / feed energy) (default).
+ * - **default** — grayscale neutrals with violet accent; red errors, green reposts (product default).
+ * - **pulse** — electric violet on cool gray-violet neutrals (social / feed energy).
  * - **ember** — sunset coral: peachy shell surfaces, pink-orange brand accent
  *   (light), and ember-glow coral on wine-tinted charcoal (dark).
  *
@@ -45,7 +46,7 @@ export type ColorScheme = "light" | "dark";
 /**
  * Named theme flavour: which palette family {@link resolveTheme} returns for a
  * given {@link ColorScheme}. The UI Kit exposes a switcher; product code defaults
- * to `"pulse"`.
+ * to `"default"`.
  */
 export type ThemeFlavor =
   /**
@@ -58,8 +59,13 @@ export type ThemeFlavor =
    */
   | "matrix"
   /**
-   * Social / feed aesthetic: violet brand accent on cool gray-violet neutrals.
+   * Grayscale base with a violet accent; red reserved for
+   * {@link Theme.danger}. Product default.
    * @defaultValue Used when {@link resolveTheme}'s flavour is omitted or no provider sets flavour.
+   */
+  | "default"
+  /**
+   * Social / feed aesthetic: violet brand accent on cool gray-violet neutrals.
    */
   | "pulse"
   /**
@@ -434,10 +440,74 @@ const EMBER_DARK_THEME: Theme = Object.freeze({
   scrim: "rgba(0,0,0,0.45)",
 });
 
+/**
+ * Default light: white paper, black ink, gray structure; violet accent, red errors.
+ */
+const DEFAULT_LIGHT_THEME: Theme = Object.freeze({
+  fg: "#141414",
+  fgEmphasis: "#000000",
+  fgMuted: "#6b6b6b",
+  fgInverse: "#ffffff",
+
+  surfaceCard: "#ffffff",
+  surfaceSubtle: "#f7f7f7",
+  surfaceInput: "#ededed",
+  surfaceWell: "#e0e0e0",
+  surfaceInverse: "#141414",
+
+  borderDefault: "#cccccc",
+  borderSubtle: "#d9d9d9",
+  borderEmphasis: "#8b5cf6",
+  borderHandle: "#b3b3b3",
+
+  primary: "#7c3aed",
+  onPrimary: "#ffffff",
+  danger: "#dc2626",
+  onDanger: "#ffffff",
+  success: "#15803d",
+  onSuccess: "#ffffff",
+
+  scrim: "rgba(0,0,0,0.45)",
+});
+
+/**
+ * Default dark: near-black surfaces, light gray copy, violet accent fills.
+ */
+const DEFAULT_DARK_THEME: Theme = Object.freeze({
+  fg: "#f5f5f5",
+  fgEmphasis: "#ffffff",
+  fgMuted: "#a3a3a3",
+  fgInverse: "#141414",
+
+  surfaceCard: "#0a0a0a",
+  surfaceSubtle: "#141414",
+  surfaceInput: "#1f1f1f",
+  surfaceWell: "#2a2a2a",
+  surfaceInverse: "#f5f5f5",
+
+  borderDefault: "#3d3d3d",
+  borderSubtle: "#333333",
+  borderEmphasis: "#c4b5fd",
+  borderHandle: "#525252",
+
+  primary: "#a78bfa",
+  onPrimary: "#ffffff",
+  danger: "#ef4444",
+  onDanger: "#ffffff",
+  success: "#34d399",
+  onSuccess: "#ffffff",
+
+  scrim: "rgba(0,0,0,0.45)",
+});
+
 const THEME_BY_FLAVOR_AND_SCHEME: Record<
   ThemeFlavor,
   Record<ColorScheme, Theme>
 > = Object.freeze({
+  default: Object.freeze({
+    light: DEFAULT_LIGHT_THEME,
+    dark: DEFAULT_DARK_THEME,
+  }),
   gazette: Object.freeze({
     light: GAZETTE_LIGHT_THEME,
     dark: GAZETTE_DARK_THEME,
@@ -464,12 +534,12 @@ const THEME_BY_FLAVOR_AND_SCHEME: Record<
  *
  * @param scheme - {@link ColorScheme} to resolve. Consumers reading from
  *   `useColorScheme()` should map `null` to `"light"`.
- * @param flavor - {@link ThemeFlavor} palette family. Defaults to `"pulse"`.
+ * @param flavor - {@link ThemeFlavor} palette family. Defaults to `"default"`.
  * @returns A frozen {@link Theme} -- safe to memoise upstream.
  */
 export function resolveTheme(
   scheme: ColorScheme,
-  flavor: ThemeFlavor = "pulse",
+  flavor: ThemeFlavor = "default",
 ): Theme {
   const pair = THEME_BY_FLAVOR_AND_SCHEME[flavor];
   return scheme === "dark" ? pair.dark : pair.light;

@@ -248,6 +248,66 @@ describe("resolveTheme", () => {
         scrim: "rgba(0,0,0,0.45)",
       },
     ],
+    [
+      "default",
+      "light",
+      {
+        fg: "#141414",
+        fgEmphasis: "#000000",
+        fgMuted: "#6b6b6b",
+        fgInverse: "#ffffff",
+
+        surfaceCard: "#ffffff",
+        surfaceSubtle: "#f7f7f7",
+        surfaceInput: "#ededed",
+        surfaceWell: "#e0e0e0",
+        surfaceInverse: "#141414",
+
+        borderDefault: "#cccccc",
+        borderSubtle: "#d9d9d9",
+        borderEmphasis: "#8b5cf6",
+        borderHandle: "#b3b3b3",
+
+        primary: "#7c3aed",
+        onPrimary: "#ffffff",
+        danger: "#dc2626",
+        onDanger: "#ffffff",
+        success: "#15803d",
+        onSuccess: "#ffffff",
+
+        scrim: "rgba(0,0,0,0.45)",
+      },
+    ],
+    [
+      "default",
+      "dark",
+      {
+        fg: "#f5f5f5",
+        fgEmphasis: "#ffffff",
+        fgMuted: "#a3a3a3",
+        fgInverse: "#141414",
+
+        surfaceCard: "#0a0a0a",
+        surfaceSubtle: "#141414",
+        surfaceInput: "#1f1f1f",
+        surfaceWell: "#2a2a2a",
+        surfaceInverse: "#f5f5f5",
+
+        borderDefault: "#3d3d3d",
+        borderSubtle: "#333333",
+        borderEmphasis: "#c4b5fd",
+        borderHandle: "#525252",
+
+        primary: "#a78bfa",
+        onPrimary: "#ffffff",
+        danger: "#ef4444",
+        onDanger: "#ffffff",
+        success: "#34d399",
+        onSuccess: "#ffffff",
+
+        scrim: "rgba(0,0,0,0.45)",
+      },
+    ],
   ];
 
   it.each(palette)(
@@ -257,8 +317,8 @@ describe("resolveTheme", () => {
     },
   );
 
-  it("defaults flavor to pulse when omitted", () => {
-    expect(resolveTheme("light")).toEqual(resolveTheme("light", "pulse"));
+  it("defaults flavor to default when omitted", () => {
+    expect(resolveTheme("light")).toEqual(resolveTheme("light", "default"));
   });
 
   it("returns a stable reference for the same scheme and flavor", () => {
@@ -267,6 +327,9 @@ describe("resolveTheme", () => {
     );
     expect(resolveTheme("dark", "matrix")).toBe(resolveTheme("dark", "matrix"));
     expect(resolveTheme("dark", "ember")).toBe(resolveTheme("dark", "ember"));
+    expect(resolveTheme("light", "default")).toBe(
+      resolveTheme("light", "default"),
+    );
   });
 
   it("returns frozen palettes", () => {
@@ -275,7 +338,13 @@ describe("resolveTheme", () => {
   });
 
   describe("cross-scheme invariants", () => {
-    const flavors: ThemeFlavor[] = ["gazette", "matrix", "pulse", "ember"];
+    const flavors: ThemeFlavor[] = [
+      "gazette",
+      "matrix",
+      "pulse",
+      "ember",
+      "default",
+    ];
 
     it("primary, danger, and success always paint white on top", () => {
       for (const flavor of flavors) {

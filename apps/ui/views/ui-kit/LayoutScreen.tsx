@@ -55,7 +55,7 @@ export default function LayoutScreen() {
             Repeating SVG texture behind the app shell (see <Code>App.tsx</Code>{" "}
             <Code>AppChrome</Code>): one seamless tile per{" "}
             <Code>ThemeFlavor</Code>, tinted from the active palette. Thumbnails
-            use nested <Code>ThemeFlavorProvider</Code> so all four read with the
+            use nested <Code>ThemeFlavorProvider</Code> so all five read with the
             current light/dark scheme.
           </Description>
         ),
@@ -69,7 +69,7 @@ export default function LayoutScreen() {
           <View style={styles.stretch}>
             <Cluster>
               {(
-                ["gazette", "matrix", "pulse", "ember"] as const
+                ["default", "gazette", "matrix", "pulse", "ember"] as const
               ).map((fl) => (
                 <View key={fl} style={styles.patternCell}>
                   <ThemeFlavorProvider defaultFlavor={fl}>

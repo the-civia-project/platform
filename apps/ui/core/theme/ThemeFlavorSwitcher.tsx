@@ -4,6 +4,7 @@ import type { ThemeFlavor } from "../../components/use-theme";
 import { useThemeFlavor } from "../../components/use-theme";
 
 const THEME_OPTIONS: ReadonlyArray<{ value: ThemeFlavor; label: string }> = [
+  { value: "default", label: "Default" },
   { value: "gazette", label: "Gazette" },
   { value: "matrix", label: "Matrix" },
   { value: "pulse", label: "Pulse" },
