@@ -1,15 +1,29 @@
 /**
- * Profile row: leading {@link Avatar}, then a name and a country flag. When a `from` location
- * is provided the flag moves to a second line in front of the location; otherwise the flag
- * sits inline at the end of the name. The `flag` prop accepts an ISO 3166-1 alpha-2 country
+ * Profile row: leading {@link Avatar}, then an identity stack (display name, optional
+ * `@handle`, country flag, optional `from` location). When {@link ProfileProps.handle}
+ * or {@link ProfileProps.from} is set and {@link ProfileProps.inline} is off, the stack
+ * uses multiple lines (name, then `@handle`, then flag + location). With only a name and
+ * flag, the flag stays inline at the end of the name. The `flag` prop accepts an ISO 3166-1 alpha-2 country
  * code and is rendered as a real PNG via `react-native-country-flag` (FlagCDN), with a
  * theme-inverted hairline border so the flag rectangle reads cleanly on either theme.
  */
 import { StyleSheet, View } from "react-native";
 import CountryFlag from "react-native-country-flag";
 import Avatar, { type AvatarSize } from "./Avatar";
-import { Text } from "./Typography";
+import { Code, Text } from "./Typography";
 import { useTheme } from "./use-theme";
+
+/** Accessibility label for the leading avatar from identity fields. */
+function profileAvatarLabel(name?: string, handle?: string): string {
+  const trimmedName = name?.trim();
+  if (trimmedName) {
+    return `${trimmedName}'s avatar`;
+  }
+  if (handle) {
+    return `@${handle}'s avatar`;
+  }
+  return "User avatar";
+}
 
 /**
  * `#rrggbb` foreground token to `rgba(r,g,b,a)` for hairlines over raster assets.
@@ -51,6 +65,14 @@ export type ProfileProps = {
   source: string;
   /** Display name -- full name, nickname, or username. Omitted when unknown. */
   name?: string;
+  /**
+   * Canonical username without the leading `@`. Renders as {@link Code}
+   * `@{handle}` on its own line in stacked layouts, or inline after the
+   * display name when {@link ProfileProps.inline} is set. When
+   * {@link ProfileProps.name} is omitted, the handle becomes the primary
+   * line instead.
+   */
+  handle?: string;
   /**
    * ISO 3166-1 alpha-2 country code (e.g. `"RO"`, `"US"`, `"GB"`). Forwarded to
    * `react-native-country-flag` lower-cased, which resolves a small PNG from FlagCDN.
@@ -135,6 +157,7 @@ const SIZE_TOKENS: Record<
 export default function Profile({
   source,
   name,
+  handle,
   flag,
   from,
   size = "md",
@@ -157,14 +180,35 @@ export default function Profile({
     lineHeight: tokens.metaLineHeight,
   };
 
-  // Stacked layout only kicks in when (a) the caller hasn't opted into `inline` and
-  // (b) there's an actual `from` to render on the second line. Inline mode always
-  // collapses to one row -- `from`, if present, joins the flag inline rather than
-  // wrapping below; if absent, the row simply drops the location segment.
-  const stacked = !inline && Boolean(from);
-  const hasName = Boolean(name?.trim());
+  const trimmedName = name?.trim();
+  const hasName = Boolean(trimmedName);
+  const hasHandle = Boolean(handle);
   const hasFlag = Boolean(flag);
-  const avatarLabel = hasName ? `${name}'s avatar` : "User avatar";
+  const hasFrom = Boolean(from);
+  const hasGeo = hasFlag || hasFrom;
+  // Stacked layout when the caller wants multiple lines and at least one field needs
+  // to sit below the primary identity line (`from`, or `@handle` when not inline).
+  const stacked = !inline && (hasFrom || hasHandle);
+  const avatarLabel = profileAvatarLabel(trimmedName, handle);
+
+  const handleLine = hasHandle ? (
+    <View style={styles.handleRow}>
+      <Code>{`@${handle}`}</Code>
+    </View>
+  ) : null;
+
+  const geoRow = hasGeo ? (
+    <View style={styles.metaRow}>
+      {hasFlag ? (
+        <CountryFlag isoCode={flag!} size={tokens.flag} style={flagStyle} />
+      ) : null}
+      {from ? (
+        <Text style={[styles.meta, metaDynamic]} numberOfLines={1}>
+          {from}
+        </Text>
+      ) : null}
+    </View>
+  ) : null;
 
   return (
     <View style={[styles.row, { gap: tokens.rowGap }]}>
@@ -178,32 +222,27 @@ export default function Profile({
           <>
             {hasName ? (
               <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
-                {name}
+                {trimmedName}
               </Text>
-            ) : null}
-            {hasFlag || from ? (
-              <View style={styles.metaRow}>
-                {hasFlag ? (
-                  <CountryFlag
-                    isoCode={flag!}
-                    size={tokens.flag}
-                    style={flagStyle}
-                  />
-                ) : null}
-                {from ? (
-                  <Text style={[styles.meta, metaDynamic]} numberOfLines={1}>
-                    {from}
-                  </Text>
-                ) : null}
+            ) : hasHandle ? (
+              <View style={styles.handleRow}>
+                <Code>{`@${handle}`}</Code>
               </View>
             ) : null}
+            {hasName && handleLine}
+            {geoRow}
           </>
         ) : (
           <View style={styles.nameRow}>
             {hasName ? (
               <Text style={[styles.name, nameDynamic]} numberOfLines={1}>
-                {name}
+                {trimmedName}
               </Text>
+            ) : hasHandle ? (
+              <Code>{`@${handle}`}</Code>
+            ) : null}
+            {inline && hasName && hasHandle ? (
+              <Code>{`@${handle}`}</Code>
             ) : null}
             {hasFlag ? (
               <CountryFlag
@@ -243,6 +282,9 @@ const styles = StyleSheet.create({
   name: {
     fontWeight: "600",
     flexShrink: 1,
+  },
+  handleRow: {
+    marginTop: 2,
   },
   metaRow: {
     flexDirection: "row",

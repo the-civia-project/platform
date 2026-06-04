@@ -48,6 +48,7 @@ describe("platform user profile mapping", () => {
   it("builds Profile row props without a fake name", () => {
     expect(platformUserToProfileProps(sampleUser)).toEqual({
       source: expect.stringContaining("dicebear"),
+      handle: "whimsical.axolotl.42",
       flag: "RO",
       from: "Bucharest, Romania",
     });

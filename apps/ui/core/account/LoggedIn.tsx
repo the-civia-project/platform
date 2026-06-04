@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useTheme } from "../../components/use-theme";
 import { AccountCtx, useAccountContext } from "./account-context";
 import { resetRootRoute, type RootAuthRoute } from "./auth-navigation";
 import {
@@ -91,12 +92,13 @@ function AuthNavigationSync() {
 }
 
 function AuthGate({ children }: PropsWithChildren) {
+  const theme = useTheme();
   const authReady = useIsAuthReady();
 
   if (!authReady) {
     return (
       <View style={gateStyles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.fgMuted} />
       </View>
     );
   }

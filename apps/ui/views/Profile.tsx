@@ -4,6 +4,7 @@ import { ChevronLeft, Settings } from "lucide-react-native";
 import { useCallback, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { IconButton } from "../components/Button";
+import { useTheme } from "../components/use-theme";
 import UserProfile from "../components/UserProfile";
 import { useUserProfileFeed } from "../core/demo/user-profile-feed";
 import { usePlatformUser } from "../core/account/hooks";
@@ -84,13 +85,14 @@ function ProfileContent({
 }
 
 export default function Profile() {
+  const theme = useTheme();
   const platformUser = usePlatformUser();
   const { user } = useUser();
 
   if (!platformUser) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.fgMuted} />
       </View>
     );
   }

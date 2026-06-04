@@ -77,9 +77,11 @@ export function AuthScreen({
 }
 
 export function AuthLoading() {
+  const theme = useTheme();
+
   return (
     <View style={styles.loading}>
-      <ActivityIndicator size="large" />
+      <ActivityIndicator size="large" color={theme.fgMuted} />
     </View>
   );
 }

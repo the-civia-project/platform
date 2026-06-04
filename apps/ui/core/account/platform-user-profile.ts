@@ -75,6 +75,7 @@ export function platformUserToProfileProps(
   return {
     source: header.avatar,
     ...(header.name ? { name: header.name } : {}),
+    ...(header.handle ? { handle: header.handle } : {}),
     ...(header.flag ? { flag: header.flag } : {}),
     ...(header.location ? { from: header.location } : {}),
   };

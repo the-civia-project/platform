@@ -287,7 +287,7 @@ export function PostComposer({
 
   return (
     <View style={styles.container}>
-      <Profile {...author} size="sm" inline />
+      <Profile {...author} size="sm" />
 
       <TextArea
         value={value.content}

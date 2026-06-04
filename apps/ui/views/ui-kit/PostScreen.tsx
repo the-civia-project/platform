@@ -22,6 +22,7 @@
  * {@link Post} beneath the controls. Every press handler logs to the console
  * so the demo feels live in Metro / the browser.
  */
+import { useUser } from "@clerk/expo";
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Page } from "../../components/Page";
@@ -49,6 +50,8 @@ import {
   Label,
   Lede,
 } from "../../components/Typography";
+import { usePlatformUser } from "../../core/account/hooks";
+import { platformUserToProfileProps } from "../../core/account/platform-user-profile";
 import { randomAvatar } from "../../core/demo/random-avatar";
 
 /**
@@ -77,6 +80,7 @@ const authors = {
   aria: {
     source: randomAvatar("Aria"),
     name: "Aria Popescu",
+    handle: "aria.popescu",
     flag: "RO",
     from: "Bucharest, Romania",
   },
@@ -940,12 +944,25 @@ const logHandlers = (label: string) => ({
  * Default-exported screen registered with the UI Kit stack as `post`.
  */
 export default function PostScreen() {
+  const platformUser = usePlatformUser();
+  const { user } = useUser();
   const [postKind, setPostKind] = useState<DemoPostKind>("text");
   const [relationKind, setRelationKind] =
     useState<DemoRelationKind>("none");
   const [embedPostKind, setEmbedPostKind] = useState<DemoPostKind>("text");
   const [activeFlags, setActiveFlags] =
     useState<readonly string[]>(INITIAL_ACTIVE_FLAGS);
+
+  const viewerAuthor = useMemo((): ProfileProps => {
+    if (platformUser) {
+      return platformUserToProfileProps(
+        platformUser,
+        user?.imageUrl,
+        user?.id,
+      );
+    }
+    return authors.aria;
+  }, [platformUser, user?.imageUrl, user?.id]);
 
   useEffect(() => {
     if (!isArchetypeKind(postKind)) {
@@ -979,12 +996,11 @@ export default function PostScreen() {
     }
 
     const author: ProfileProps = toggles.from
-      ? authors.aria
-      : {
-        source: authors.aria.source,
-        name: authors.aria.name,
-        flag: authors.aria.flag,
-      };
+      ? viewerAuthor
+      : (() => {
+        const { from: _location, ...withoutLocation } = viewerAuthor;
+        return withoutLocation;
+      })();
 
     return {
       author,
@@ -1004,7 +1020,7 @@ export default function PostScreen() {
       comments: toggles.comments ? sampleComments : undefined,
       ...logHandlers("Playground"),
     };
-  }, [postKind, relationKind, embedPostKind, toggles]);
+  }, [postKind, relationKind, embedPostKind, toggles, viewerAuthor]);
 
   return (
     <Page>

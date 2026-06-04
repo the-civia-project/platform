@@ -272,6 +272,32 @@ export default function ProfileScreen() {
         ),
       },
       {
+        key: "with-handle",
+        name: "with handle",
+        summary: (
+          <Description>
+            Full identity including a canonical <Code>@handle</Code> on its
+            own line (muted monospace via <Code>Code</Code>) between the
+            display name and the flag / location row.
+          </Description>
+        ),
+        usage: (
+          <Caption>
+            <Label>API: </Label>
+            <Code>{`<Profile source="..." name="..." handle="aria.popescu" flag="RO" from="..." />`}</Code>
+          </Caption>
+        ),
+        samples: (
+          <Profile
+            source={randomAvatar("Aria")}
+            name="Aria Popescu"
+            handle="aria.popescu"
+            flag="RO"
+            from="Bucharest, Romania"
+          />
+        ),
+      },
+      {
         key: "no-from",
         name: "without location",
         summary: (

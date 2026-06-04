@@ -13,9 +13,10 @@
  * resolves after a 500ms simulated network delay and bubbles back via
  * the screen's `navigation.goBack()` once the submit succeeds.
  */
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useUser } from "@clerk/expo";
 import { useNavigation } from "@react-navigation/native";
+import { useMemo, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Page } from "../components/Page";
 import {
   addPictures,
@@ -24,33 +25,39 @@ import {
   type PostDraft,
 } from "../components/PostComposer";
 import { Lede } from "../components/Typography";
+import { useTheme } from "../components/use-theme";
+import { usePlatformUser } from "../core/account/hooks";
+import { platformUserToProfileProps } from "../core/account/platform-user-profile";
 import { useDraftLinkExtraction } from "../core/composer/use-draft-link-extraction";
 import { useImagePicker } from "../core/composer/use-image-picker";
 import { useLinkResolver } from "../core/composer/use-link-resolver";
 import { useSubmitPost } from "../core/composer/use-submit-post";
 
 /**
- * Stand-in identity for the composer's author row. A real product flow
- * would pull this from the auth context (`useViewer()` or similar); for
- * now the screen pins a fixed record so the composer reads with a
- * concrete identity in every demo.
- */
-const COMPOSE_AUTHOR = {
-  source: "https://i.pravatar.cc/96?img=12",
-  name: "You",
-  flag: "RO",
-} as const;
-
-/**
  * Default-exported full-page composer. Registered with `App.tsx`'s root
  * stack as the `compose` route.
  */
 export default function Compose() {
+  const theme = useTheme();
   const navigation = useNavigation();
+  const platformUser = usePlatformUser();
+  const { user } = useUser();
   const [draft, setDraft] = useState<PostDraft>(emptyDraft);
   const { pickPictures } = useImagePicker();
   const { resolve } = useLinkResolver();
   const { submit, submitting, error } = useSubmitPost();
+
+  const author = useMemo(
+    () =>
+      platformUser
+        ? platformUserToProfileProps(
+            platformUser,
+            user?.imageUrl,
+            user?.id,
+          )
+        : null,
+    [platformUser, user?.imageUrl, user?.id],
+  );
 
   useDraftLinkExtraction({ draft, onChange: setDraft, resolve });
 
@@ -59,12 +66,22 @@ export default function Compose() {
     if (ok) navigation.goBack();
   };
 
+  if (!author) {
+    return (
+      <Page>
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={theme.fgMuted} />
+        </View>
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <Lede>Share a thought, a link, or a photo. Take your time.</Lede>
       <View style={styles.composerWrap}>
         <PostComposer
-          author={COMPOSE_AUTHOR}
+          author={author}
           value={draft}
           onChange={setDraft}
           onSubmit={handleSubmit}
@@ -85,6 +102,12 @@ export default function Compose() {
 }
 
 const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 200,
+  },
   /**
    * Vertical breathing room around the composer body. The {@link Page}
    * shell already supplies the page padding; this wrapper just adds the

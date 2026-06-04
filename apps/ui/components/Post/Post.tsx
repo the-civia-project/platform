@@ -1576,7 +1576,7 @@ export default function Post({
 
   return (
     <View style={styles.container}>
-      <Profile {...author} size="sm" inline />
+      <Profile {...author} size="sm" />
 
       <View style={styles.body}>
         <View style={styles.bodyColumn}>
@@ -1602,7 +1602,7 @@ export default function Post({
               variant="inverted"
               shape="round"
               onPress={onMenuPress}
-              accessibilityLabel={`Post options for ${author.name}`}
+              accessibilityLabel={`Post options for ${author.name ?? (author.handle ? `@${author.handle}` : "user")}`}
             />
           </View>
         ) : null}
