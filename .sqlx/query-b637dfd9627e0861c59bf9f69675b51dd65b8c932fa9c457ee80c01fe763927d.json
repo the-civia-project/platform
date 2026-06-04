@@ -16,7 +16,9 @@
             "name": "account.validation_type",
             "kind": {
               "Enum": [
-                "CLERK"
+                "CLERK",
+                "CLERK_AND_EUDI",
+                "CLERK_AND_EIDAS"
               ]
             }
           }
