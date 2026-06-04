@@ -94,7 +94,7 @@ function SignUpCreateAccount({
     <AuthScreen
       eyebrow="Step 1 of 3"
       title="Create your account"
-      subtitle="Sign up with email and password. You will set up your profile after verifying your email."
+      subtitle="Sign up with email and password. You will finish registration after verifying your email."
       error={formError}
       footer={
         <AuthLinkFooter
@@ -158,7 +158,6 @@ export default function SignUp() {
       return;
     }
 
-    console.log("creating account", emailAddress, password);
     const { error } = await signUp.password({
       emailAddress: emailAddress.trim(),
       password,

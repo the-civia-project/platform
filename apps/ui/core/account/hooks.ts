@@ -3,15 +3,10 @@ import { useMemo } from "react";
 import { useAccountContext } from "./account-context";
 
 export function useAccountActions() {
-  const {
-    completeIntro,
-    completeProfileOnboarding,
-    registerWithProfile,
-    resetAccountState,
-  } = useAccountContext();
+  const { completeIntro, registerWithProfile, resetAccountState } =
+    useAccountContext();
   return {
     completeIntro,
-    completeProfileOnboarding,
     registerWithProfile,
     resetAccountState,
   };
@@ -29,33 +24,15 @@ export function usePlatformUser() {
 
 export function useIsLoggedIn() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered, profileOnboardingCompleted } = useAccountContext();
-  return (
-    isLoaded &&
-    !!isSignedIn &&
-    platformRegistered &&
-    profileOnboardingCompleted
-  );
+  const { platformRegistered } = useAccountContext();
+  return isLoaded && !!isSignedIn && platformRegistered;
 }
 
-/** Signed in with a platform account (may still be in profile onboarding). */
+/** Signed in with a platform account. */
 export function useIsPlatformMember() {
   const { isSignedIn, isLoaded } = useAuth();
   const { platformRegistered, platformResolved } = useAccountContext();
   return isLoaded && !!isSignedIn && platformResolved && platformRegistered;
-}
-
-export function useNeedsProfileOnboarding() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered, platformResolved, profileOnboardingCompleted } =
-    useAccountContext();
-  return (
-    isLoaded &&
-    !!isSignedIn &&
-    platformResolved &&
-    platformRegistered &&
-    !profileOnboardingCompleted
-  );
 }
 
 export function useIsGuest() {

@@ -17,7 +17,6 @@ import {
   useIsPendingPlatformSync,
   useNeedsCiviaIntro,
   useNeedsCompleteRegistration,
-  useNeedsProfileOnboarding,
 } from "./hooks";
 import {
   fetchPlatformMe,
@@ -51,7 +50,6 @@ function AuthNavigationSync() {
   const isGuestAuth = useIsGuestAuthScreen();
   const needsCiviaIntro = useNeedsCiviaIntro();
   const needsCompleteRegistration = useNeedsCompleteRegistration();
-  const needsProfileOnboarding = useNeedsProfileOnboarding();
   const { guestAuthDestination, clearGuestAuthDestination } = useAccountContext();
 
   useEffect(() => {
@@ -61,11 +59,6 @@ function AuthNavigationSync() {
 
     if (isLoggedIn) {
       resetRootRoute("home");
-      return;
-    }
-
-    if (needsProfileOnboarding) {
-      resetRootRoute("auth/profile-onboarding");
       return;
     }
 
@@ -91,7 +84,6 @@ function AuthNavigationSync() {
     isLoggedIn,
     needsCiviaIntro,
     needsCompleteRegistration,
-    needsProfileOnboarding,
     pendingSync,
   ]);
 
@@ -132,8 +124,6 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
   const [introCompleted, setIntroCompleted] = useState(false);
   const [guestAuthDestination, setGuestAuthDestination] =
     useState<RootAuthRoute | null>(null);
-  const [profileOnboardingCompleted, setProfileOnboardingCompleted] =
-    useState(false);
   const [platformUser, setPlatformUser] = useState<PlatformUser | null>(null);
   const [platformRegistered, setPlatformRegistered] = useState(false);
   const [platformResolved, setPlatformResolved] = useState(false);
@@ -149,16 +139,11 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     setGuestAuthDestination(null);
   }, []);
 
-  const completeProfileOnboarding = useCallback(() => {
-    setProfileOnboardingCompleted(true);
-  }, []);
-
   const resetAccountState = useCallback(() => {
     checkInFlightRef.current = false;
     registerInFlightRef.current = false;
     setIntroCompleted(false);
     setGuestAuthDestination(null);
-    setProfileOnboardingCompleted(false);
     setPlatformUser(null);
     setPlatformRegistered(false);
     setPlatformResolved(false);
@@ -257,7 +242,6 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     () => ({
       introCompleted,
       guestAuthDestination,
-      profileOnboardingCompleted,
       platformUser,
       platformRegistered,
       platformResolved,
@@ -265,14 +249,12 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       registerError,
       completeIntro,
       clearGuestAuthDestination,
-      completeProfileOnboarding,
       registerWithProfile,
       resetAccountState,
     }),
     [
       introCompleted,
       guestAuthDestination,
-      profileOnboardingCompleted,
       platformUser,
       platformRegistered,
       platformResolved,
@@ -280,7 +262,6 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       registerError,
       completeIntro,
       clearGuestAuthDestination,
-      completeProfileOnboarding,
       registerWithProfile,
       resetAccountState,
     ],

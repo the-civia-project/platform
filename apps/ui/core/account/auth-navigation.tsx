@@ -8,8 +8,7 @@ export type RootAuthRoute =
   | "auth/intro"
   | "auth/sign-in"
   | "auth/sign-up"
-  | "auth/complete-registration"
-  | "auth/profile-onboarding";
+  | "auth/complete-registration";
 
 export const rootNavigationRef = createNavigationContainerRef();
 

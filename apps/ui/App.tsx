@@ -31,9 +31,7 @@ import {
   useIsUiKitRouteAvailable,
   useNeedsCiviaIntro,
   useNeedsCompleteRegistration,
-  useNeedsProfileOnboarding,
 } from "./core/account/hooks";
-import ProfileOnboardingScreen from "./core/account/onboarding/ProfileOnboardingScreen";
 import CiviaIntroScreen from "./core/account/intro/CiviaIntroScreen";
 import { UiKitQuickAccess } from "./core/UiKitQuickAccess";
 import SignIn from "./core/account/SignIn";
@@ -234,17 +232,6 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: "Complete registration",
-        header: () => null,
-      },
-    },
-    "auth/profile-onboarding": {
-      if: useNeedsProfileOnboarding,
-      screen: ProfileOnboardingScreen,
-      linking: {
-        path: "auth/profile-onboarding",
-      },
-      options: {
-        title: "Profile setup",
         header: () => null,
       },
     },

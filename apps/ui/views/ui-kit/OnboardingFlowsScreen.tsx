@@ -17,7 +17,6 @@ import {
   ExampleBlock,
   type ExampleBlockProps,
 } from "./components/ExampleBlock";
-import { ProfileOnboardingKitPreview } from "./components/ProfileOnboardingKitPreview";
 import { civiaIntroFlow } from "./onboarding-flows";
 import { onboardingFlowDesignVariants } from "./onboarding-flow-design-variants";
 type DesignRow = ExampleBlockProps & { key: string };
@@ -47,9 +46,8 @@ export default function OnboardingFlowsScreen() {
   return (
     <Page>
       <Lede>
-        Pre-auth Civia introduction flow designs and post-registration profile
-        onboarding previews. Introduction samples use step pills and prev/next;
-        profile onboarding is UI-only (no API persistence).
+        Pre-auth Civia introduction flow designs. Samples use step pills and
+        prev/next to walk through each screen.
       </Lede>
       <Section title="Civia introduction — flow designs">
         {designRows.map((row) => (
@@ -60,34 +58,9 @@ export default function OnboardingFlowsScreen() {
             description={row.description}
             usage={row.usage}
             samples={row.samples}
-            isLast={false}
+            isLast={row.isLast}
           />
         ))}
-      </Section>
-      <Section title="Post-registration profile onboarding">
-        <ExampleBlock
-          name="profile-onboarding"
-          summary={
-            <Description>
-              Seven-step flow after registration (name, avatar, location, bio,
-              other, interests, follows). UI-only — nothing is persisted.
-            </Description>
-          }
-          description={
-            <Description>
-              Use step pills and prev/next to review each screen. Matches the
-              product route <Code>auth/profile-onboarding</Code>.
-            </Description>
-          }
-          usage={
-            <Caption>
-              <Label>API: </Label>
-              <Code>{`<ProfileOnboardingKitPreview />`}</Code>
-            </Caption>
-          }
-          samples={<ProfileOnboardingKitPreview />}
-          isLast
-        />
       </Section>
     </Page>
   );

@@ -5,7 +5,6 @@ import type { RegistrationProfile } from "./registration-profile";
 
 export type AccountContextValue = {
   introCompleted: boolean;
-  profileOnboardingCompleted: boolean;
   platformUser: PlatformUser | null;
   platformRegistered: boolean;
   platformResolved: boolean;
@@ -17,7 +16,6 @@ export type AccountContextValue = {
   guestAuthDestination: RootAuthRoute | null;
   completeIntro: (destination: RootAuthRoute) => void;
   clearGuestAuthDestination: () => void;
-  completeProfileOnboarding: () => void;
   registerWithProfile: (profile: RegistrationProfile) => Promise<void>;
   resetAccountState: () => void;
 };
