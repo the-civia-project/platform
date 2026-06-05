@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE account.\"user\"\n                SET citizen_of = $2, updated_at = now()\n                WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "country_numeric_code[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "country_numeric_code",
+                  "kind": {
+                    "Domain": "Int4"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "363855749ea9ca8b198dded9c9fe68c5e0c2933a1dd4690fadbca4bf6e08ab39"
+}

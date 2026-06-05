@@ -48,3 +48,4 @@ base64 = "0.22"
 p256 = { version = "0.13", features = ["ecdsa", "pem", "pkcs8"] }
 elliptic-curve = "0.13"
 rustls-pemfile = "2.2.0"
+josekit = "0.10.3"

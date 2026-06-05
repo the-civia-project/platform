@@ -217,6 +217,30 @@ impl Database {
         .map(|row| row.id)
     }
 
+    pub async fn update_user_citizen_of(
+        &self,
+        user_id: Uuid,
+        citizen_of: Vec<CountryNumericCode>,
+    ) -> Result<(), sqlx::Error> {
+        let result = sqlx::query!(
+            r#"
+                UPDATE account."user"
+                SET citizen_of = $2, updated_at = now()
+                WHERE id = $1
+            "#,
+            user_id,
+            citizen_of as Vec<CountryNumericCode>,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        Ok(())
+    }
+
     pub async fn delete_user_by_clerk_id(&self, clerk_id: &str) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 

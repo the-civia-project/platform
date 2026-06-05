@@ -478,6 +478,36 @@ async fn wallet_presentation_response(
     state
         .eudi
         .accept_wallet_response(session_id, &headers, &body)?;
+
+    // Session id is the platform user id (see apps/ui eudi presentation request URI).
+    let citizen_of = parse_citizen_of(vec![276]).map_err(|_| {
+        EudiPresentationError::Internal("Germany country code misconfigured".into())
+    })?;
+
+    match state
+        .db
+        .update_user_citizen_of(session_id, citizen_of)
+        .await
+    {
+        Ok(()) => tracing::info!(
+            user_id = %session_id,
+            citizen_of = 276,
+            "wallet response: set user citizenship to Germany"
+        ),
+        Err(sqlx::Error::RowNotFound) => tracing::warn!(
+            user_id = %session_id,
+            "wallet response: platform user not found for citizenship update"
+        ),
+        Err(err) => {
+            tracing::error!(
+                error = %err,
+                user_id = %session_id,
+                "wallet response: failed to update citizenship"
+            );
+            return Err(EudiPresentationError::Internal(err.to_string()));
+        }
+    }
+
     Ok(Json(json!({})))
 }
 
