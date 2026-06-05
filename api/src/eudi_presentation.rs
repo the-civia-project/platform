@@ -72,11 +72,6 @@ struct PresentationSession {
     failure_reason: Option<String>,
 }
 
-#[derive(Serialize)]
-pub struct RedirectToCompleteResponse {
-    pub redirect_uri: String,
-}
-
 pub struct PresentationCompleteView {
     pub session_id: Uuid,
     pub status: PresentationStatus,
@@ -199,7 +194,7 @@ impl EudiPresentationService {
         session_id: Uuid,
         headers: &HeaderMap,
         body: &Bytes,
-    ) -> Result<RedirectToCompleteResponse, EudiPresentationError> {
+    ) -> Result<(), EudiPresentationError> {
         let content_type = headers
             .get(CONTENT_TYPE)
             .and_then(|v| v.to_str().ok())
@@ -246,9 +241,7 @@ impl EudiPresentationService {
             "wallet posted encrypted presentation response"
         );
 
-        Ok(RedirectToCompleteResponse {
-            redirect_uri: self.complete_uri_for_session(session_id),
-        })
+        Ok(())
     }
 
     pub fn complete_view(
@@ -607,7 +600,7 @@ mod tests {
     }
 
     #[test]
-    fn wallet_response_returns_complete_redirect() {
+    fn wallet_response_stores_encrypted_payload() {
         let service = test_service();
         let session_id = Uuid::new_v4();
         service.issue_jar(session_id).expect("jar");
@@ -619,13 +612,11 @@ mod tests {
             HeaderValue::from_static("application/x-www-form-urlencoded"),
         );
 
-        let redirect = service
+        service
             .accept_wallet_response(session_id, &headers, &body)
-            .expect("redirect");
-        assert!(
-            redirect
-                .redirect_uri
-                .ends_with(&format!("/wallet/presentation/complete/{session_id}"))
-        );
+            .expect("accept response");
+
+        let view = service.complete_view(session_id).expect("complete view");
+        assert_eq!(view.status, PresentationStatus::ResponseReceived);
     }
 }

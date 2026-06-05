@@ -1,14 +1,16 @@
 use crate::db::database::{CountryNumericCode, Database, country_display_name};
-use crate::eudi_presentation::{EudiPresentationError, EudiPresentationService, PresentationStatus};
 use crate::db::user::{CreateUser, User, ValidationType};
+use crate::eudi_presentation::{
+    EudiPresentationError, EudiPresentationService, PresentationStatus,
+};
 use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
 use crate::validation::{is_valid_handle, is_valid_location};
 use axum::body::{Body, Bytes};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{DefaultBodyLimit, Extension, Multipart, OriginalUri, Path, State};
-use axum::http::{HeaderMap, Uri};
 use axum::http::StatusCode;
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
+use axum::http::{HeaderMap, Uri};
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::{
@@ -462,13 +464,7 @@ async fn wallet_presentation_response(
     let body_text = String::from_utf8_lossy(&body);
     let headers_log: Vec<String> = headers
         .iter()
-        .map(|(name, value)| {
-            format!(
-                "{}: {}",
-                name,
-                value.to_str().unwrap_or("<non-utf8>")
-            )
-        })
+        .map(|(name, value)| format!("{}: {}", name, value.to_str().unwrap_or("<non-utf8>")))
         .collect();
 
     tracing::info!(
@@ -479,18 +475,35 @@ async fn wallet_presentation_response(
         "POST /wallet/presentation/response"
     );
 
-    let redirect = state
+    state
         .eudi
         .accept_wallet_response(session_id, &headers, &body)?;
-    Ok(Json(json!({ "redirect_uri": redirect.redirect_uri })))
+    Ok(Json(json!({})))
 }
 
-#[tracing::instrument(fields(%session_id), skip(state))]
+#[tracing::instrument(fields(%session_id), skip(state, headers, body))]
 async fn presentation_complete(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
-) -> Result<Json<serde_json::Value>, EudiPresentationError> {
-    tracing::info!("GET /wallet/presentation/complete/{session_id}");
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<impl IntoResponse, EudiPresentationError> {
+    let url = full_request_url(&uri, &headers);
+    let body_text = String::from_utf8_lossy(&body);
+    let headers_log: Vec<String> = headers
+        .iter()
+        .map(|(name, value)| format!("{}: {}", name, value.to_str().unwrap_or("<non-utf8>")))
+        .collect();
+
+    tracing::info!(
+        %session_id,
+        %url,
+        headers = ?headers_log,
+        body = %body_text,
+        "GET /wallet/presentation/complete"
+    );
+
     let view = state.eudi.complete_view(session_id)?;
     let status = match view.status {
         PresentationStatus::Pending => "pending",
@@ -498,11 +511,19 @@ async fn presentation_complete(
         PresentationStatus::Verified => "verified",
         PresentationStatus::Failed => "failed",
     };
-    Ok(Json(json!({
+    let response_body = json!({
         "session_id": view.session_id,
         "status": status,
         "failure_reason": view.failure_reason,
-    })))
+    });
+    match view.status {
+        PresentationStatus::Pending | PresentationStatus::ResponseReceived => {
+            Ok(StatusCode::NO_CONTENT.into_response())
+        }
+        PresentationStatus::Verified | PresentationStatus::Failed => {
+            Ok((StatusCode::OK, Json(response_body)).into_response())
+        }
+    }
 }
 
 #[tracing::instrument(skip(app_state), fields(%key))]
