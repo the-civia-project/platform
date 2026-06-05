@@ -7,7 +7,7 @@ import { Description } from "../../components/Typography";
 import { useTheme } from "../../components/use-theme";
 import { AuthScreen } from "./AuthScreen";
 import { buildEudiPresentationRequestUri } from "./eudi-presentation-request-uri";
-import { usePlatformUser } from "./hooks";
+import { usePlatformUser, usePollPlatformCitizenship } from "./hooks";
 
 function EidasReloadNotice() {
   const theme = useTheme();
@@ -36,6 +36,7 @@ function EidasReloadNotice() {
 
 export default function EidasVerification() {
   const platformUser = usePlatformUser();
+  usePollPlatformCitizenship();
 
   const requestUri = useMemo(() => {
     if (!platformUser?.user_id) {

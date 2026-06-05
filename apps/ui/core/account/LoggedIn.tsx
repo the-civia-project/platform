@@ -239,30 +239,6 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    if (
-      !isLoaded ||
-      !isSignedIn ||
-      !platformRegistered ||
-      !platformUser ||
-      platformUser.citizen_of.length > 0
-    ) {
-      return;
-    }
-
-    const poll = setInterval(() => {
-      void checkPlatformAccount({ silent: true });
-    }, 3000);
-
-    return () => clearInterval(poll);
-  }, [
-    checkPlatformAccount,
-    isLoaded,
-    isSignedIn,
-    platformRegistered,
-    platformUser,
-  ]);
-
-  useEffect(() => {
     if (!isLoaded) {
       setPlatformResolved(false);
       return;
@@ -277,6 +253,10 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     void checkPlatformAccount();
   }, [isLoaded, isSignedIn, resetAccountState, checkPlatformAccount]);
 
+  const refreshPlatformUser = useCallback(async () => {
+    await checkPlatformAccount({ silent: true });
+  }, [checkPlatformAccount]);
+
   const value = useMemo(
     () => ({
       introCompleted,
@@ -289,6 +269,7 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
+      refreshPlatformUser,
       resetAccountState,
     }),
     [
@@ -302,6 +283,7 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
+      refreshPlatformUser,
       resetAccountState,
     ],
   );

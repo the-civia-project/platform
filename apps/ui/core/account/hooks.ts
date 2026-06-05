@@ -1,11 +1,13 @@
 import { useAuth } from "@clerk/expo";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAccountContext } from "./account-context";
 import { deletePlatformAccount, type PlatformUser } from "./platform-api";
 
 export function hasPlatformCitizenship(user: PlatformUser | null): boolean {
   return (user?.citizen_of.length ?? 0) > 0;
 }
+
+const CITIZENSHIP_POLL_INTERVAL_MS = 5000;
 
 export function useAccountActions() {
   const { completeIntro, registerWithProfile, resetAccountState } =
@@ -86,6 +88,24 @@ export function useNeedsEidasVerification() {
     platformRegistered &&
     !hasPlatformCitizenship(platformUser)
   );
+}
+
+/** Poll GET /me until {@link PlatformUser.citizen_of} is populated (eIDAS screen). */
+export function usePollPlatformCitizenship() {
+  const platformUser = usePlatformUser();
+  const { refreshPlatformUser } = useAccountContext();
+
+  useEffect(() => {
+    if (hasPlatformCitizenship(platformUser)) {
+      return;
+    }
+
+    const poll = setInterval(() => {
+      void refreshPlatformUser();
+    }, CITIZENSHIP_POLL_INTERVAL_MS);
+
+    return () => clearInterval(poll);
+  }, [platformUser, refreshPlatformUser]);
 }
 
 /** True while POST /register is in flight (form stays visible; button shows progress). */

@@ -17,6 +17,8 @@ export type AccountContextValue = {
   completeIntro: (destination: RootAuthRoute) => void;
   clearGuestAuthDestination: () => void;
   registerWithProfile: (profile: RegistrationProfile) => Promise<void>;
+  /** Re-fetch GET /me without clearing auth-ready state (e.g. eIDAS citizenship poll). */
+  refreshPlatformUser: () => Promise<void>;
   resetAccountState: () => void;
 };
 
