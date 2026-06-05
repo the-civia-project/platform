@@ -1,15 +1,18 @@
 import { useAuth } from "@clerk/expo";
 import { useMemo } from "react";
 import { useAccountContext } from "./account-context";
-import { deletePlatformAccount } from "./platform-api";
+import { deletePlatformAccount, type PlatformUser } from "./platform-api";
+
+export function hasPlatformCitizenship(user: PlatformUser | null): boolean {
+  return (user?.citizen_of.length ?? 0) > 0;
+}
 
 export function useAccountActions() {
-  const { completeIntro, registerWithProfile, completeEidasVerification, resetAccountState } =
+  const { completeIntro, registerWithProfile, resetAccountState } =
     useAccountContext();
   return {
     completeIntro,
     registerWithProfile,
-    completeEidasVerification,
     resetAccountState,
   };
 }
@@ -26,8 +29,13 @@ export function usePlatformUser() {
 
 export function useIsLoggedIn() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered, eidasVerified } = useAccountContext();
-  return isLoaded && !!isSignedIn && platformRegistered && eidasVerified;
+  const { platformRegistered, platformUser } = useAccountContext();
+  return (
+    isLoaded &&
+    !!isSignedIn &&
+    platformRegistered &&
+    hasPlatformCitizenship(platformUser)
+  );
 }
 
 /** Signed in with a platform account. */
@@ -69,14 +77,14 @@ export function useNeedsCompleteRegistration() {
 
 export function useNeedsEidasVerification() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered, platformResolved, eidasVerified } =
+  const { platformRegistered, platformResolved, platformUser } =
     useAccountContext();
   return (
     isLoaded &&
     !!isSignedIn &&
     platformResolved &&
     platformRegistered &&
-    !eidasVerified
+    !hasPlatformCitizenship(platformUser)
   );
 }
 

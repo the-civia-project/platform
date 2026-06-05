@@ -136,7 +136,6 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
   const [platformUser, setPlatformUser] = useState<PlatformUser | null>(null);
   const [platformRegistered, setPlatformRegistered] = useState(false);
   const [platformResolved, setPlatformResolved] = useState(false);
-  const [eidasVerified, setEidasVerified] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
 
@@ -157,18 +156,19 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     setPlatformUser(null);
     setPlatformRegistered(false);
     setPlatformResolved(false);
-    setEidasVerified(false);
     setRegistering(false);
     setRegisterError(null);
   }, []);
 
-  const checkPlatformAccount = useCallback(async () => {
+  const checkPlatformAccount = useCallback(async (options?: { silent?: boolean }) => {
     if (!isLoaded || !isSignedIn || checkInFlightRef.current) {
       return;
     }
     checkInFlightRef.current = true;
-    setPlatformResolved(false);
-    setRegisterError(null);
+    if (!options?.silent) {
+      setPlatformResolved(false);
+      setRegisterError(null);
+    }
 
     const tokenGetter = async () =>
       resolveSessionToken(() => getTokenRef.current());
@@ -183,14 +183,18 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
         setPlatformRegistered(false);
       }
     } catch (err) {
-      setPlatformUser(null);
-      setPlatformRegistered(false);
-      setRegisterError(
-        err instanceof Error ? err.message : "Could not reach the platform",
-      );
+      if (!options?.silent) {
+        setPlatformUser(null);
+        setPlatformRegistered(false);
+        setRegisterError(
+          err instanceof Error ? err.message : "Could not reach the platform",
+        );
+      }
     } finally {
       checkInFlightRef.current = false;
-      setPlatformResolved(true);
+      if (!options?.silent) {
+        setPlatformResolved(true);
+      }
     }
   }, [isLoaded, isSignedIn]);
 
@@ -234,12 +238,29 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     [isLoaded, isSignedIn],
   );
 
-  const completeEidasVerification = useCallback(() => {
-    if (!platformRegistered) {
-      throw new Error("Register on the platform before completing eIDAS verification.");
+  useEffect(() => {
+    if (
+      !isLoaded ||
+      !isSignedIn ||
+      !platformRegistered ||
+      !platformUser ||
+      platformUser.citizen_of.length > 0
+    ) {
+      return;
     }
-    setEidasVerified(true);
-  }, [platformRegistered]);
+
+    const poll = setInterval(() => {
+      void checkPlatformAccount({ silent: true });
+    }, 3000);
+
+    return () => clearInterval(poll);
+  }, [
+    checkPlatformAccount,
+    isLoaded,
+    isSignedIn,
+    platformRegistered,
+    platformUser,
+  ]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -263,13 +284,11 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       platformUser,
       platformRegistered,
       platformResolved,
-      eidasVerified,
       registering,
       registerError,
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
-      completeEidasVerification,
       resetAccountState,
     }),
     [
@@ -278,13 +297,11 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       platformUser,
       platformRegistered,
       platformResolved,
-      eidasVerified,
       registering,
       registerError,
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
-      completeEidasVerification,
       resetAccountState,
     ],
   );
