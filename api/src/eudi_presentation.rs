@@ -344,13 +344,13 @@ fn pid_presentation_claims(
                 "keys": [response_jwk]
             },
             "vp_formats_supported": {
-                "mso_mdoc": { "alg": ["ES256", "Ed25519"] },
+                "mso_mdoc": { "alg": ["ES256"] },
                 "dc+sd-jwt": {
-                    "kb-jwt_alg_values": ["ES256", "Ed25519"],
-                    "sd-jwt_alg_values": ["ES256", "Ed25519"]
+                    "kb-jwt_alg_values": ["ES256"],
+                    "sd-jwt_alg_values": ["ES256"]
                 }
             },
-            "encrypted_response_enc_values_supported": ["A128GCM"]
+            "encrypted_response_enc_values_supported": ["A128GCM", "A256GCM"]
         }
     })
 }
