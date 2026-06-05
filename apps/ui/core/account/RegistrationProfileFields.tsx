@@ -1,8 +1,7 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import Button from "../../components/Button";
 import { TextInput } from "../../components/Input";
-import { Select } from "../../components/Select";
-import { Description, Strong } from "../../components/Typography";
-import { citizenshipSelectOptions } from "./countries";
+import { Description } from "../../components/Typography";
 import type { RegistrationProfile } from "./registration-profile";
 import { generateSuggestedHandle } from "./suggested-handle";
 import { authFieldStackStyle } from "./AuthScreen";
@@ -22,15 +21,6 @@ export function RegistrationProfileFields({
 
   return (
     <View style={{ gap: 16 }}>
-      <Select
-        label="EU country"
-        sheetTitle="EU country"
-        placeholder="Select country"
-        options={citizenshipSelectOptions()}
-        value={value.citizenOf}
-        onChange={(citizenOf) => onChange({ ...value, citizenOf })}
-      />
-
       <View style={fieldStack}>
         <TextInput
           label="Username"
@@ -41,14 +31,15 @@ export function RegistrationProfileFields({
         />
         {handleError ? <Description>{handleError}</Description> : null}
         <Description>
-          Your public @handle — edit or pick another suggestion.
+          Your public @handle — edit or pick another suggestion. EU citizenship
+          is confirmed in the next step with your digital identity wallet.
         </Description>
-        <Pressable
+        <Button
+          variant="simple"
           onPress={() => onChange({ ...value, handle: generateSuggestedHandle() })}
-          accessibilityRole="button"
         >
-          <Strong>Suggest another username</Strong>
-        </Pressable>
+          Suggest another username
+        </Button>
       </View>
     </View>
   );

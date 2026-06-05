@@ -22,6 +22,7 @@ import PostComposerScreen from "./PostComposerScreen";
 import PostPatternsScreen from "./PostPatternsScreen";
 import PostScreen from "./PostScreen";
 import ProfileScreen from "./ProfileScreen";
+import QrCodeScreen from "./QrCodeScreen";
 import SelectionScreen from "./SelectionScreen";
 import TypographyScreen from "./TypographyScreen";
 import UserProfileScreen from "./UserProfileScreen";
@@ -114,6 +115,11 @@ export default function UiKit() {
         name="selection"
         component={SelectionScreen}
         options={{ title: "Selection" }}
+      />
+      <Stack.Screen
+        name="qr-code"
+        component={QrCodeScreen}
+        options={{ title: "QR code" }}
       />
       <Stack.Screen
         name="profile"

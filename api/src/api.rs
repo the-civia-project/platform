@@ -55,7 +55,7 @@ pub fn build_router(state: AppState) -> Router {
             get(wallet_presentation_start),
         )
         .route(
-            "/presentation/complete/{session_id}",
+            "/wallet/presentation/complete/{session_id}",
             get(presentation_complete).post(presentation_complete),
         )
         .layer(DefaultBodyLimit::max(6 * 1024 * 1024));
@@ -244,10 +244,11 @@ async fn register(
         };
     }
 
-    let citizen_of = parse_citizen_of(payload.citizen_of.unwrap_or_default()).map_err(|status| {
-        tracing::warn!(clerk_sub = %clerk_jwt.sub, "POST /register: invalid citizen_of");
-        status
-    })?;
+    let citizen_of =
+        parse_citizen_of(payload.citizen_of.unwrap_or_default()).map_err(|status| {
+            tracing::warn!(clerk_sub = %clerk_jwt.sub, "POST /register: invalid citizen_of");
+            status
+        })?;
 
     let handle = parse_handle(payload.handle)?;
     let avatar = parse_avatar_key(payload.avatar_key)?;
@@ -432,7 +433,7 @@ fn eudi_verifier_public_base_url() -> String {
 
 fn presentation_complete_redirect_uri(session_id: Uuid) -> String {
     format!(
-        "{}/presentation/complete/{}",
+        "{}/wallet/presentation/complete/{}",
         eudi_verifier_public_base_url(),
         session_id
     )

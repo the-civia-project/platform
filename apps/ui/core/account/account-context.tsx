@@ -8,6 +8,7 @@ export type AccountContextValue = {
   platformUser: PlatformUser | null;
   platformRegistered: boolean;
   platformResolved: boolean;
+  eidasVerified: boolean;
   registering: boolean;
   registerError: string | null;
   /**
@@ -17,6 +18,7 @@ export type AccountContextValue = {
   completeIntro: (destination: RootAuthRoute) => void;
   clearGuestAuthDestination: () => void;
   registerWithProfile: (profile: RegistrationProfile) => Promise<void>;
+  completeEidasVerification: () => void;
   resetAccountState: () => void;
 };
 

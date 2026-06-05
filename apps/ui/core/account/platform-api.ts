@@ -24,7 +24,6 @@ export type PlatformUser = {
 };
 
 export type RegisterPlatformUserInput = {
-  citizen_of: number[];
   handle: string;
   location: string | null;
   avatar_key: string | null;
@@ -143,7 +142,6 @@ export async function registerPlatformUser(
   const res = await authFetch("/register", getToken, {
     method: "POST",
     body: JSON.stringify({
-      citizen_of: input.citizen_of,
       handle: input.handle,
       location: input.location,
       avatar_key: input.avatar_key,
@@ -162,7 +160,7 @@ export async function registerPlatformUser(
 
   return {
     user_id: json.user_id,
-    citizen_of: input.citizen_of,
+    citizen_of: [],
     tag_label: "",
     tag_discriminator: 0,
     handle: input.handle,

@@ -65,6 +65,7 @@
     "expo-web-browser": "~55.0.10",
     "i18n-iso-countries": "^7.14.0",
     "lucide-react-native": "^1.14.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
@@ -79,6 +80,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "@types/react": "~19.2.2",
     "typescript": "~5.9.2",
     "vitest": "^4.1.6"

@@ -28,6 +28,8 @@ export type UiKitStackParamList = {
   "loading-indicator": undefined;
   /** Logo size and inline-row examples. */
   logo: undefined;
+  /** QR code encoder and renderer — string payload to scannable SVG symbol. */
+  "qr-code": undefined;
   /** Avatar and Profile examples -- image tiles plus identity rows with name, flag, and location. */
   profile: undefined;
   /** Structured post primitives: StructuredTile, KindHeader, ProportionRow, ProgressBar, … */

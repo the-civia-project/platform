@@ -39,9 +39,9 @@ export default function CompleteRegistration() {
 
   return (
     <AuthScreen
-      eyebrow="Step 3 of 3"
+      eyebrow="Step 3 of 4"
       title="Create your account"
-      subtitle="Choose your EU country and the @username you will post under."
+      subtitle="Choose the @username you will post under."
       error={displayError}
     >
       <RegistrationProfileFields

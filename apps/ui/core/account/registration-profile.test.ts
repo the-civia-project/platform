@@ -7,17 +7,9 @@ import {
 } from "./registration-profile";
 
 describe("registration profile", () => {
-  it("requires EU country and username", () => {
+  it("requires a username", () => {
     const profile = createDefaultRegistrationProfile();
-    expect(validateRegistrationProfileFields(profile).formError).toMatch(
-      /EU country/i,
-    );
-
-    const noHandle = {
-      ...profile,
-      citizenOf: 276 as const,
-      handle: "",
-    };
+    const noHandle = { ...profile, handle: "" };
     expect(validateRegistrationProfileFields(noHandle).handleError).toMatch(
       /username/i,
     );
@@ -29,14 +21,12 @@ describe("registration profile", () => {
     expect(profile.handle).toMatch(/^@[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\.[0-9]+$/);
   });
 
-  it("sends handle and country only to the API", () => {
+  it("sends handle only to the API", () => {
     const profile = {
       ...createDefaultRegistrationProfile(),
-      citizenOf: 276 as const,
       handle: "@whimsical.axolotl.42",
     };
     expect(prepareRegistrationProfileForApi(profile)).toEqual({
-      citizen_of: [276],
       handle: "@whimsical.axolotl.42",
       location: null,
       avatar_key: null,
@@ -46,7 +36,6 @@ describe("registration profile", () => {
   it("rejects invalid handles", () => {
     const profile = {
       ...createDefaultRegistrationProfile(),
-      citizenOf: 276 as const,
       handle: "not-a-handle",
     };
     expect(validateRegistrationProfileFields(profile).handleError).toBeTruthy();

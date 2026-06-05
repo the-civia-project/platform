@@ -4,11 +4,12 @@ import { useAccountContext } from "./account-context";
 import { deletePlatformAccount } from "./platform-api";
 
 export function useAccountActions() {
-  const { completeIntro, registerWithProfile, resetAccountState } =
+  const { completeIntro, registerWithProfile, completeEidasVerification, resetAccountState } =
     useAccountContext();
   return {
     completeIntro,
     registerWithProfile,
+    completeEidasVerification,
     resetAccountState,
   };
 }
@@ -25,8 +26,8 @@ export function usePlatformUser() {
 
 export function useIsLoggedIn() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered } = useAccountContext();
-  return isLoaded && !!isSignedIn && platformRegistered;
+  const { platformRegistered, eidasVerified } = useAccountContext();
+  return isLoaded && !!isSignedIn && platformRegistered && eidasVerified;
 }
 
 /** Signed in with a platform account. */
@@ -57,13 +58,25 @@ export function useNeedsCiviaIntro() {
 
 export function useNeedsCompleteRegistration() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { platformRegistered, platformResolved, registering } =
-    useAccountContext();
+  const { platformRegistered, platformResolved } = useAccountContext();
   return (
     isLoaded &&
     !!isSignedIn &&
     platformResolved &&
     !platformRegistered
+  );
+}
+
+export function useNeedsEidasVerification() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { platformRegistered, platformResolved, eidasVerified } =
+    useAccountContext();
+  return (
+    isLoaded &&
+    !!isSignedIn &&
+    platformResolved &&
+    platformRegistered &&
+    !eidasVerified
   );
 }
 

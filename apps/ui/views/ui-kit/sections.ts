@@ -101,6 +101,14 @@ export const kitSections: UiKitSection[] = [
     title: "Logo",
     description: "Brand image with xs-xl size presets (16px-128px).",
   },
+  {
+    name: "qr-code",
+    category: "foundations",
+    initial: "Q",
+    title: "QR code",
+    description:
+      "Scannable SVG QR codes — generic payloads and EUDI HAIP wallet presentation.",
+  },
   // Components -- reusable building blocks: surfaces, controls, layout scaffolding.
   {
     name: "layout",

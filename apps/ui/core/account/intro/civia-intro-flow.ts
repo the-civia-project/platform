@@ -142,7 +142,7 @@ export const civiaIntroFlow: OnboardingFlow = {
         },
         {
           kind: "paragraph",
-          text: "Use email and password to enter The Civia Platform. We ask for your country of citizenship so your civic identity matches the platform.",
+          text: "Use email and password to enter The Civia Platform. You confirm EU citizenship with your digital identity wallet after choosing a username.",
         },
         {
           kind: "point",

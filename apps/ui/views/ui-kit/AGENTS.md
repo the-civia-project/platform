@@ -152,6 +152,8 @@ but not every component owns its screen. The current mapping:
 | --------------------------------------- | --------------------------------------------- |
 | `Typography.tsx` (all role helpers)     | `TypographyScreen` (foundation: `typography`) |
 | `Logo.tsx`                              | `LogoScreen` (foundation: `logo`)             |
+| `QrCode/` (`QrCode`)                    | `QrCodeScreen` (foundation: `qr-code`)        |
+| `EUDIQRCode/` (`EUDIQRCode`)            | `QrCodeScreen` (foundation: `qr-code`)        |
 | `Page.tsx`, `Section.tsx`, `Cluster.tsx`, `Hero.tsx` | `LayoutScreen` (component: `layout`) |
 | `LoadingIndicator/` (`LoadingIndicator`) | `LoadingIndicatorScreen` (component: `loading-indicator`) |
 | `card/` (`Card`, `DisclosureCard`)      | `CardsScreen` (component: `cards`)            |

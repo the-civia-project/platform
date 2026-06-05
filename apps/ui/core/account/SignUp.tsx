@@ -36,7 +36,7 @@ function SignUpEmailVerification({
 
   return (
     <AuthScreen
-      eyebrow="Step 2 of 3"
+      eyebrow="Step 2 of 4"
       title="Validate your account"
       subtitle="Enter the verification code we sent to your email."
       error={formError}
@@ -92,7 +92,7 @@ function SignUpCreateAccount({
 
   return (
     <AuthScreen
-      eyebrow="Step 1 of 3"
+      eyebrow="Step 1 of 4"
       title="Create your account"
       subtitle="Sign up with email and password. You will finish registration after verifying your email."
       error={formError}

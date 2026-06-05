@@ -23,6 +23,7 @@ import {
 import { rootNavigationRef } from "./core/account/auth-navigation";
 import { getPlatformApiUrl } from "./core/account/platform-api";
 import CompleteRegistration from "./core/account/CompleteRegistration";
+import EidasVerification from "./core/account/EidasVerification";
 import { LoggedInProvider } from "./core/account/LoggedIn";
 import {
   useIsGuestAuthScreen,
@@ -31,6 +32,7 @@ import {
   useIsUiKitRouteAvailable,
   useNeedsCiviaIntro,
   useNeedsCompleteRegistration,
+  useNeedsEidasVerification,
 } from "./core/account/hooks";
 import CiviaIntroScreen from "./core/account/intro/CiviaIntroScreen";
 import { UiKitQuickAccess } from "./core/UiKitQuickAccess";
@@ -233,6 +235,17 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: "Complete registration",
+        header: () => null,
+      },
+    },
+    "auth/eidas-verification": {
+      if: useNeedsEidasVerification,
+      screen: EidasVerification,
+      linking: {
+        path: "auth/eidas-verification",
+      },
+      options: {
+        title: "eIDAS verification",
         header: () => null,
       },
     },

@@ -35,7 +35,10 @@
               "host": "platform.theciviaproject.org"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -48,7 +51,9 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/gabriela/gabriela-latin-400-normal.ttf"],
+          "fonts": [
+            "./assets/fonts/gabriela/gabriela-latin-400-normal.ttf"
+          ],
           "android": {
             "fonts": [
               {
@@ -63,7 +68,9 @@
             ]
           },
           "ios": {
-            "fonts": ["./assets/fonts/gabriela/gabriela-latin-400-normal.ttf"]
+            "fonts": [
+              "./assets/fonts/gabriela/gabriela-latin-400-normal.ttf"
+            ]
           }
         }
       ],

@@ -18,6 +18,7 @@ import {
   useIsPendingPlatformSync,
   useNeedsCiviaIntro,
   useNeedsCompleteRegistration,
+  useNeedsEidasVerification,
 } from "./hooks";
 import {
   fetchPlatformMe,
@@ -51,6 +52,7 @@ function AuthNavigationSync() {
   const isGuestAuth = useIsGuestAuthScreen();
   const needsCiviaIntro = useNeedsCiviaIntro();
   const needsCompleteRegistration = useNeedsCompleteRegistration();
+  const needsEidasVerification = useNeedsEidasVerification();
   const { guestAuthDestination, clearGuestAuthDestination } = useAccountContext();
 
   useEffect(() => {
@@ -60,6 +62,11 @@ function AuthNavigationSync() {
 
     if (isLoggedIn) {
       resetRootRoute("home");
+      return;
+    }
+
+    if (needsEidasVerification) {
+      resetRootRoute("auth/eidas-verification");
       return;
     }
 
@@ -85,6 +92,7 @@ function AuthNavigationSync() {
     isLoggedIn,
     needsCiviaIntro,
     needsCompleteRegistration,
+    needsEidasVerification,
     pendingSync,
   ]);
 
@@ -128,6 +136,7 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
   const [platformUser, setPlatformUser] = useState<PlatformUser | null>(null);
   const [platformRegistered, setPlatformRegistered] = useState(false);
   const [platformResolved, setPlatformResolved] = useState(false);
+  const [eidasVerified, setEidasVerified] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
 
@@ -148,6 +157,7 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     setPlatformUser(null);
     setPlatformRegistered(false);
     setPlatformResolved(false);
+    setEidasVerified(false);
     setRegistering(false);
     setRegisterError(null);
   }, []);
@@ -224,6 +234,13 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
     [isLoaded, isSignedIn],
   );
 
+  const completeEidasVerification = useCallback(() => {
+    if (!platformRegistered) {
+      throw new Error("Register on the platform before completing eIDAS verification.");
+    }
+    setEidasVerified(true);
+  }, [platformRegistered]);
+
   useEffect(() => {
     if (!isLoaded) {
       setPlatformResolved(false);
@@ -246,11 +263,13 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       platformUser,
       platformRegistered,
       platformResolved,
+      eidasVerified,
       registering,
       registerError,
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
+      completeEidasVerification,
       resetAccountState,
     }),
     [
@@ -259,11 +278,13 @@ export function LoggedInProvider({ children }: PropsWithChildren) {
       platformUser,
       platformRegistered,
       platformResolved,
+      eidasVerified,
       registering,
       registerError,
       completeIntro,
       clearGuestAuthDestination,
       registerWithProfile,
+      completeEidasVerification,
       resetAccountState,
     ],
   );

@@ -13,6 +13,12 @@ const clerkPublishableKey =
 const platformApiUrl =
   process.env.PLATFORM_API_URL?.replace(/\/$/, "") ?? DEFAULT_PLATFORM_API_URL;
 
+const eudiVerifierPublicUrl =
+  process.env.EXPO_PUBLIC_EUDI_VERIFIER_URL ??
+  process.env.EUDI_VERIFIER_PUBLIC_URL;
+
+const eudiX509HashClientId = process.env.EXPO_PUBLIC_EUDI_X509_HASH_CLIENT_ID;
+
 const config: ExpoConfig = {
   name: "The Civia Platform",
   slug: "ui",
@@ -108,6 +114,8 @@ const config: ExpoConfig = {
   extra: {
     clerkPublishableKey,
     platformApiUrl,
+    eudiVerifierPublicUrl,
+    eudiX509HashClientId,
   },
 };
 
