@@ -129,7 +129,7 @@ export function buildEudiAuthorizationRequestUri(
   input: EudiAuthorizationRequestInput,
 ): string {
   const clientId = assertEudiX509HashClientId(input.clientId);
-  const requestUri = assertHttpsRequestUri(input.requestUri);
+  const requestUri = encodeURIComponent(assertHttpsRequestUri(input.requestUri))
   const requestUriMethod = input.requestUriMethod ?? "post";
   const scheme = input.scheme ?? "haip-vp";
 

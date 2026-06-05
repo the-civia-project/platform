@@ -12,11 +12,11 @@ use axum::response::{IntoResponse, Response};
 use base64::Engine;
 use base64::engine::general_purpose::{STANDARD as B64_STD, URL_SAFE_NO_PAD as B64_URL};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use p256::SecretKey;
 use p256::ecdsa::SigningKey;
 use p256::elliptic_curve::rand_core::OsRng;
 use p256::elliptic_curve::sec1::ToEncodedPoint;
 use p256::pkcs8::EncodePrivateKey;
-use p256::SecretKey;
 use serde::Serialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -216,7 +216,9 @@ impl EudiPresentationService {
             .ok_or_else(|| EudiPresentationError::InvalidResponse("missing response".into()))?;
 
         if encrypted.len() > 1_000_000 {
-            return Err(EudiPresentationError::InvalidResponse("payload too large".into()));
+            return Err(EudiPresentationError::InvalidResponse(
+                "payload too large".into(),
+            ));
         }
 
         let mut sessions = self
@@ -248,7 +250,10 @@ impl EudiPresentationService {
         })
     }
 
-    pub fn complete_view(&self, session_id: Uuid) -> Result<PresentationCompleteView, EudiPresentationError> {
+    pub fn complete_view(
+        &self,
+        session_id: Uuid,
+    ) -> Result<PresentationCompleteView, EudiPresentationError> {
         let sessions = self
             .sessions
             .read()
@@ -307,8 +312,6 @@ fn pid_presentation_claims(
                     "id": "pid-sd-jwt",
                     "format": "dc+sd-jwt",
                     "claims": [
-                        { "path": ["given_name"] },
-                        { "path": ["family_name"] },
                         { "path": ["nationalities"] }
                     ],
                     "meta": {
@@ -319,8 +322,6 @@ fn pid_presentation_claims(
                     "id": "pid-mso-mdoc",
                     "format": "mso_mdoc",
                     "claims": [
-                        { "path": ["eu.europa.ec.eudi.pid.1", "given_name"] },
-                        { "path": ["eu.europa.ec.eudi.pid.1", "family_name"] },
                         { "path": ["eu.europa.ec.eudi.pid.1", "nationality"] }
                     ],
                     "meta": {
@@ -371,12 +372,14 @@ fn generate_ephemeral_response_key() -> Result<(Value, String), EudiPresentation
         .map_err(|e| EudiPresentationError::Signing(e.to_string()))?
         .to_string();
     let point = secret.public_key().to_encoded_point(false);
-    let x = B64_URL.encode(point.x().ok_or_else(|| {
-        EudiPresentationError::Signing("ephemeral public key missing x".into())
-    })?);
-    let y = B64_URL.encode(point.y().ok_or_else(|| {
-        EudiPresentationError::Signing("ephemeral public key missing y".into())
-    })?);
+    let x =
+        B64_URL.encode(point.x().ok_or_else(|| {
+            EudiPresentationError::Signing("ephemeral public key missing x".into())
+        })?);
+    let y =
+        B64_URL.encode(point.y().ok_or_else(|| {
+            EudiPresentationError::Signing("ephemeral public key missing y".into())
+        })?);
     let kid = Uuid::new_v4().to_string();
     let jwk = json!({
         "kty": "EC",
@@ -401,9 +404,8 @@ fn load_signing_material() -> Result<(EncodingKey, Vec<u8>, String), EudiPresent
 
     let cert_path = std::env::var("EUDI_ACCESS_CERT_PATH")
         .map_err(|_| EudiPresentationError::Config("EUDI_ACCESS_CERT_PATH not set".into()))?;
-    let key_path = std::env::var("EUDI_ACCESS_CERT_KEY_PATH").map_err(|_| {
-        EudiPresentationError::Config("EUDI_ACCESS_CERT_KEY_PATH not set".into())
-    })?;
+    let key_path = std::env::var("EUDI_ACCESS_CERT_KEY_PATH")
+        .map_err(|_| EudiPresentationError::Config("EUDI_ACCESS_CERT_KEY_PATH not set".into()))?;
 
     let cert_pem = fs::read_to_string(&cert_path)
         .map_err(|e| EudiPresentationError::Config(format!("read {cert_path}: {e}")))?;
@@ -452,7 +454,8 @@ fn x509_hash_base64url(cert_der: &[u8]) -> String {
     B64_URL.encode(Sha256::digest(cert_der))
 }
 
-fn generate_dev_signing_material() -> Result<(EncodingKey, Vec<u8>, String), EudiPresentationError> {
+fn generate_dev_signing_material() -> Result<(EncodingKey, Vec<u8>, String), EudiPresentationError>
+{
     let signing = SigningKey::random(&mut OsRng);
     let secret = SecretKey::from(&signing);
     let pem = secret
@@ -490,10 +493,7 @@ fn parse_form_urlencoded(body: &Bytes) -> HashMap<String, String> {
         let Some((key, value)) = pair.split_once('=') else {
             continue;
         };
-        map.insert(
-            urlencoding_decode(key),
-            urlencoding_decode(value),
-        );
+        map.insert(urlencoding_decode(key), urlencoding_decode(value));
     }
     map
 }
@@ -568,10 +568,12 @@ mod tests {
         assert_eq!(payload["response_mode"], "direct_post.jwt");
         assert_eq!(payload["state"], session_id.to_string());
         assert_eq!(payload["aud"], HAIP_AUDIENCE);
-        assert!(payload["client_id"]
-            .as_str()
-            .unwrap_or("")
-            .starts_with("x509_hash:"));
+        assert!(
+            payload["client_id"]
+                .as_str()
+                .unwrap_or("")
+                .starts_with("x509_hash:")
+        );
         assert!(payload["dcql_query"]["credentials"].is_array());
     }
 
@@ -591,6 +593,10 @@ mod tests {
         let redirect = service
             .accept_wallet_response(session_id, &headers, &body)
             .expect("redirect");
-        assert!(redirect.redirect_uri.ends_with(&format!("/wallet/presentation/complete/{session_id}")));
+        assert!(
+            redirect
+                .redirect_uri
+                .ends_with(&format!("/wallet/presentation/complete/{session_id}"))
+        );
     }
 }

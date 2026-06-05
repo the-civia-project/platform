@@ -28,16 +28,14 @@ COPY migrations ./migrations
 COPY .sqlx ./.sqlx
 COPY packages/platform-data ./packages/platform-data
 
-COPY certificates ./certificates
-
 ENV SQLX_OFFLINE=true
 
 RUN cargo build --release -p api
 
-FROM gcr.io/distroless/cc-debian12
+FROM rust:1-bookworm 
 
 COPY --from=builder /app/target/release/api /api
+COPY certificates /certificates
 
 EXPOSE 3001
-USER nonroot:nonroot
 ENTRYPOINT ["/api"]

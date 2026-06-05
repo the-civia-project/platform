@@ -35,8 +35,8 @@ export type EUDIQRCodeProps = Omit<EudiAuthorizationRequestInput, "clientId"> &
  */
 export function EUDIQRCode({
   requestUri,
-  requestUriMethod,
-  scheme,
+  requestUriMethod = 'get',
+  scheme = 'openid4vp',
   size,
   quietZone = 4,
   errorCorrectionLevel = "L",
@@ -57,7 +57,9 @@ export function EUDIQRCode({
     [clientId, requestUri, requestUriMethod, scheme],
   );
 
-  console.log("value", requestUri);
+  console.log(requestUri);
+  console.log(value);
+  // openid4vp://?client_id=x509_hash%3A3uNx62xYFFqo901cuI9ocSqM5L3YWA40IHfj9s7t-rM&request_uri=https%253A%252F%252Fcivia-platform-api.fly.dev%252Fwallet%252Fpresentation%252Fstart%252F3d2fcb97-68a8-4c58-82be-ef07608945b7&request_uri_method=get
 
   return (
     <QrCode
