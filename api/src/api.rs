@@ -1,10 +1,11 @@
 use crate::db::database::{CountryNumericCode, Database, country_display_name};
+use crate::eudi_presentation::{EudiPresentationError, EudiPresentationService, PresentationStatus};
 use crate::db::user::{CreateUser, User, ValidationType};
 use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
 use crate::validation::{is_valid_handle, is_valid_location};
 use axum::body::{Body, Bytes};
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, RawQuery, State};
+use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
 use axum::http::HeaderMap;
 use axum::http::StatusCode;
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
@@ -33,6 +34,7 @@ pub struct AppState {
     pub db: Database,
     pub avatars: AvatarStore,
     pub clerk: Clerk,
+    pub eudi: EudiPresentationService,
 }
 
 pub fn build_router(state: AppState) -> Router {
@@ -55,8 +57,12 @@ pub fn build_router(state: AppState) -> Router {
             get(wallet_presentation_start),
         )
         .route(
+            "/wallet/presentation/response/{session_id}",
+            post(wallet_presentation_response),
+        )
+        .route(
             "/wallet/presentation/complete/{session_id}",
-            get(presentation_complete).post(presentation_complete),
+            get(presentation_complete),
         )
         .layer(DefaultBodyLimit::max(6 * 1024 * 1024));
 
@@ -418,70 +424,47 @@ async fn health() -> Json<serde_json::Value> {
     Json(json!({ "status": "ok" }))
 }
 
-#[derive(Serialize)]
-struct PresentationStartResponse {
-    redirect_uri: String,
-}
-
-fn eudi_verifier_public_base_url() -> String {
-    std::env::var("EUDI_VERIFIER_PUBLIC_URL")
-        .or_else(|_| std::env::var("EXPO_PUBLIC_EUDI_VERIFIER_URL"))
-        .unwrap_or_else(|_| "http://platform.localhost:3001".into())
-        .trim_end_matches('/')
-        .to_string()
-}
-
-fn presentation_complete_redirect_uri(session_id: Uuid) -> String {
-    format!(
-        "{}/wallet/presentation/complete/{}",
-        eudi_verifier_public_base_url(),
-        session_id
-    )
-}
-
-#[tracing::instrument(fields(%session_id))]
+#[tracing::instrument(fields(%session_id), skip(state))]
 async fn wallet_presentation_start(
+    State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
-) -> Json<PresentationStartResponse> {
+) -> Result<Response, EudiPresentationError> {
     tracing::info!("GET /wallet/presentation/start/{session_id}");
-
-    Json(PresentationStartResponse {
-        redirect_uri: presentation_complete_redirect_uri(session_id),
-    })
+    state.eudi.jar_http_response(session_id)
 }
 
-fn request_body_as_json(body: &Bytes) -> serde_json::Value {
-    if body.is_empty() {
-        return json!(null);
-    }
-    if let Ok(value) = serde_json::from_slice(body) {
-        return value;
-    }
-    json!(String::from_utf8_lossy(body))
-}
-
-#[tracing::instrument(fields(%session_id), skip(headers, body))]
-async fn presentation_complete(
+#[tracing::instrument(fields(%session_id), skip(state, headers, body))]
+async fn wallet_presentation_response(
+    State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
-    RawQuery(query): RawQuery,
     headers: HeaderMap,
     body: Bytes,
-) -> Json<serde_json::Value> {
-    let content_type = headers
-        .get(CONTENT_TYPE)
-        .and_then(|value| value.to_str().ok())
-        .map(str::to_string);
+) -> Result<Json<serde_json::Value>, EudiPresentationError> {
+    tracing::info!("POST /wallet/presentation/response/{session_id}");
+    let redirect = state
+        .eudi
+        .accept_wallet_response(session_id, &headers, &body)?;
+    Ok(Json(json!({ "redirect_uri": redirect.redirect_uri })))
+}
 
-    let payload = json!({
-        "session_id": session_id,
-        "query": query,
-        "content_type": content_type,
-        "body": request_body_as_json(&body),
-    });
-
-    tracing::info!(payload = %payload, "presentation complete");
-
-    Json(payload)
+#[tracing::instrument(fields(%session_id), skip(state))]
+async fn presentation_complete(
+    State(state): State<AppState>,
+    Path(session_id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>, EudiPresentationError> {
+    tracing::info!("GET /wallet/presentation/complete/{session_id}");
+    let view = state.eudi.complete_view(session_id)?;
+    let status = match view.status {
+        PresentationStatus::Pending => "pending",
+        PresentationStatus::ResponseReceived => "response_received",
+        PresentationStatus::Verified => "verified",
+        PresentationStatus::Failed => "failed",
+    };
+    Ok(Json(json!({
+        "session_id": view.session_id,
+        "status": status,
+        "failure_reason": view.failure_reason,
+    })))
 }
 
 #[tracing::instrument(skip(app_state), fields(%key))]

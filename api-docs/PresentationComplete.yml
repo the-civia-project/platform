@@ -4,24 +4,14 @@ info:
   seq: 4
 
 docs: |-
-  Wallet redirect target after cross-device presentation.
+  Wallet browser landing after presentation (GET, §3.10).
 
-  Stub handler: logs the incoming query string and body, then echoes them
-  back as JSON. Accepts GET (query params) and POST (body).
+  Requires a prior successful POST to /wallet/presentation/response/{session_id}.
+  Returns session status for your app to observe finalization.
 
 http:
-  method: POST
-  url: "{{PLATFORM_API_URL}}/presentation/complete/{{USER_ID}}"
-  headers:
-    - name: Content-Type
-      value: application/json
-  body:
-    type: json
-    data: |-
-      {
-        "vp_token": "eyJ…",
-        "presentation_submission": {}
-      }
+  method: GET
+  url: "{{PLATFORM_API_URL}}/wallet/presentation/complete/{{USER_ID}}"
   auth: inherit
 
 settings:
@@ -31,16 +21,7 @@ settings:
   maxRedirects: 5
 
 examples:
-  - name: echo presentation payload
-    request:
-      url: "{{PLATFORM_API_URL}}/presentation/complete/550e8400-e29b-41d4-a716-446655440000?state=abc"
-      method: POST
-      body:
-        type: json
-        data: |-
-          {
-            "vp_token": "eyJ…"
-          }
+  - name: response received
     response:
       status: 200
       body:
@@ -48,9 +29,6 @@ examples:
         data: |-
           {
             "session_id": "550e8400-e29b-41d4-a716-446655440000",
-            "query": "state=abc",
-            "content_type": "application/json",
-            "body": {
-              "vp_token": "eyJ…"
-            }
+            "status": "response_received",
+            "failure_reason": null
           }

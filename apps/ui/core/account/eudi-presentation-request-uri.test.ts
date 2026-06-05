@@ -5,6 +5,7 @@ vi.mock("expo-constants", () => ({
     expoConfig: {
       extra: {
         eudiVerifierPublicUrl: "https://platform.theciviaproject.org",
+        platformApiUrl: "https://platform.example",
       },
     },
   },
@@ -13,15 +14,15 @@ vi.mock("expo-constants", () => ({
 import { buildEudiPresentationRequestUri } from "./eudi-presentation-request-uri";
 
 describe("buildEudiPresentationRequestUri", () => {
-  it("embeds the platform user id in the wallet request path", () => {
+  it("embeds the session id in the wallet presentation start path", () => {
     expect(
       buildEudiPresentationRequestUri("550e8400-e29b-41d4-a716-446655440000"),
     ).toMatch(
-      /\/wallet\/request\.jwt\/550e8400-e29b-41d4-a716-446655440000$/,
+      /\/wallet\/presentation\/start\/550e8400-e29b-41d4-a716-446655440000$/,
     );
   });
 
-  it("rejects an empty user id", () => {
-    expect(() => buildEudiPresentationRequestUri("   ")).toThrow(/user id/i);
+  it("rejects an empty session id", () => {
+    expect(() => buildEudiPresentationRequestUri("   ")).toThrow(/session id/i);
   });
 });

@@ -1,10 +1,12 @@
 mod api;
 mod db;
+mod eudi_presentation;
 mod random;
 mod storage;
 mod validation;
 
 use crate::api::{clerk_from_env, start_api, AppState};
+use crate::eudi_presentation::EudiPresentationService;
 use crate::db::database::Database;
 use crate::storage::AvatarStore;
 
@@ -53,5 +55,20 @@ async fn main() {
 
     let clerk = clerk_from_env();
 
-    start_api(AppState { db, avatars, clerk }).await;
+    let eudi = match EudiPresentationService::from_env() {
+        Ok(service) => service,
+        Err(err) => {
+            eprintln!("EUDI presentation setup failed: {err}");
+            eprintln!("Set EUDI_ACCESS_CERT_PATH + EUDI_ACCESS_CERT_KEY_PATH, or EUDI_DEV_INSECURE_SIGNING=1 for local dev.");
+            std::process::exit(1);
+        }
+    };
+
+    start_api(AppState {
+        db,
+        avatars,
+        clerk,
+        eudi,
+    })
+    .await;
 }

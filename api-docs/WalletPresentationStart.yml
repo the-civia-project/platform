@@ -4,10 +4,11 @@ info:
   seq: 3
 
 docs: |-
-  Starts a cross-device EUDI wallet presentation for the given session id
-  (typically the platform user UUID).
+  Wallet dereferences this URL as `request_uri` (GET).
 
-  Returns the verifier URL the wallet should redirect to after presentation.
+  Returns a signed OpenID4VP authorization request (JAR) per the German EUDI
+  PID presentation guide §3.1: `application/json`, `Cache-Control: no-store`,
+  body is a JSON string containing the compact JWT.
 
 http:
   method: GET
@@ -21,14 +22,16 @@ settings:
   maxRedirects: 5
 
 examples:
-  - name: presentation start
+  - name: presentation JAR
     request:
       url: "{{PLATFORM_API_URL}}/wallet/presentation/start/550e8400-e29b-41d4-a716-446655440000"
     response:
       status: 200
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Cache-Control
+          value: no-store
       body:
-        type: json
-        data: |-
-          {
-            "redirect_uri": "https://platform.theciviaproject.org/presentation/complete/550e8400-e29b-41d4-a716-446655440000"
-          }
+        type: text
+        data: '"eyJhbGciOiJFUzI1NiIsInR5cCI6Im9hdXRoLWF1dGh6LXJlcStqd3QiLCJ4NWMiOlsi…"],"eXp…"'

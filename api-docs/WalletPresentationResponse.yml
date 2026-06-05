@@ -1,0 +1,38 @@
+info:
+  name: WalletPresentationResponse
+  type: http
+  seq: 5
+
+docs: |-
+  Wallet `response_uri` for HAIP `direct_post.jwt` (§4.1).
+
+  POST `application/x-www-form-urlencoded` with `response=<JWE>`.
+  On success returns §3.3.3 JSON so the wallet can GET `redirect_uri`.
+
+http:
+  method: POST
+  url: "{{PLATFORM_API_URL}}/wallet/presentation/response/{{USER_ID}}"
+  headers:
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: text
+    data: response=eyJhbGciOiJFQ0RILUVTI…
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: redirect to complete
+    response:
+      status: 200
+      body:
+        type: json
+        data: |-
+          {
+            "redirect_uri": "https://platform.theciviaproject.org/wallet/presentation/complete/550e8400-e29b-41d4-a716-446655440000"
+          }

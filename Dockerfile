@@ -28,6 +28,8 @@ COPY migrations ./migrations
 COPY .sqlx ./.sqlx
 COPY packages/platform-data ./packages/platform-data
 
+COPY certificates ./certificates
+
 ENV SQLX_OFFLINE=true
 
 RUN cargo build --release -p api

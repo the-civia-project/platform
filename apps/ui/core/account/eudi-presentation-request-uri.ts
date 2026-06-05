@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 const DEFAULT_EUDI_VERIFIER_PUBLIC_URL = "https://civia-platform-api.fly.dev";
 
 export function getEudiVerifierPublicUrl(): string {
-  const fromExtra = process.env.PLATFORM_API_URL;
+  const fromExtra = Constants.expoConfig?.extra?.eudiVerifierPublicUrl;
   if (typeof fromExtra === "string" && fromExtra.length > 0) {
     return fromExtra.replace(/\/$/, "");
   }
@@ -11,15 +11,15 @@ export function getEudiVerifierPublicUrl(): string {
 }
 
 /**
- * HTTPS `request_uri` for {@link EUDIQRCode} — wallet fetches the signed JAR at
- * `{verifier}/wallet/request.jwt/{userId}`.
+ * HTTPS `request_uri` for {@link EUDIQRCode} — wallet GETs the signed JAR at
+ * `{verifier}/wallet/presentation/start/{sessionId}` (German PID guide §3.1).
  */
-export function buildEudiPresentationRequestUri(userId: string): string {
-  const trimmed = userId.trim();
+export function buildEudiPresentationRequestUri(sessionId: string): string {
+  const trimmed = sessionId.trim();
   if (!trimmed) {
-    throw new Error("Platform user id is required to build the EUDI request URI.");
+    throw new Error("Session id is required to build the EUDI request URI.");
   }
 
-  const encodedUserId = encodeURIComponent(trimmed);
-  return `${getEudiVerifierPublicUrl()}/wallet/request.jwt/${encodedUserId}`;
+  const encoded = encodeURIComponent(trimmed);
+  return `${getEudiVerifierPublicUrl()}/wallet/presentation/start/${encoded}`;
 }
