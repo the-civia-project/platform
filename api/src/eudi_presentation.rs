@@ -25,6 +25,8 @@ use uuid::Uuid;
 
 const HAIP_AUDIENCE: &str = "https://self-issued.me/v2";
 const REQUEST_TTL_SECS: u64 = 600;
+/// RFC 9101 / OpenID4VP media type for a dereferenced `request_uri` (GET).
+const JAR_CONTENT_TYPE: &str = "application/oauth-authz-req+jwt";
 
 #[derive(Debug, Error)]
 pub enum EudiPresentationError {
@@ -160,11 +162,12 @@ impl EudiPresentationService {
             &response_jwk,
         );
 
-        if let Some(registration_certificate) = &self.registration_certificate {
-            claims["verifier_info"] = json!({
-                "registration_certificate": registration_certificate
-            });
-        }
+        // if let Some(registration_certificate) = &self.registration_certificate {
+        //     claims["verifier_info"] = json!({
+        //         "format": "registration_cert",
+        //         "data": registration_certificate
+        //     });
+        // }
 
         let jar = sign_jar(&claims, &self.signing_key, &self.x5c_der)
             .map_err(|e| EudiPresentationError::Signing(e.to_string()))?;
@@ -180,15 +183,13 @@ impl EudiPresentationService {
 
     pub fn jar_http_response(&self, session_id: Uuid) -> Result<Response, EudiPresentationError> {
         let jar = self.issue_jar(session_id)?;
-        let body = serde_json::to_string(&jar)
-            .map_err(|e| EudiPresentationError::Internal(e.to_string()))?;
 
         Ok(Response::builder()
             .status(StatusCode::OK)
-            .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
+            .header(CONTENT_TYPE, HeaderValue::from_static(JAR_CONTENT_TYPE))
             .header(CACHE_CONTROL, HeaderValue::from_static("no-store"))
             .header(PRAGMA, HeaderValue::from_static("no-cache"))
-            .body(axum::body::Body::from(body))
+            .body(axum::body::Body::from(jar))
             .map_err(|e| EudiPresentationError::Internal(e.to_string()))?)
     }
 
@@ -551,6 +552,34 @@ mod tests {
 
     fn test_service() -> EudiPresentationService {
         EudiPresentationService::new_dev()
+    }
+
+    #[tokio::test]
+    async fn jar_http_response_is_raw_jwt_not_json_string() {
+        let service = test_service();
+        let session_id = Uuid::new_v4();
+        let response = service
+            .jar_http_response(session_id)
+            .expect("http response");
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response
+                .headers()
+                .get(CONTENT_TYPE)
+                .and_then(|v| v.to_str().ok()),
+            Some(JAR_CONTENT_TYPE)
+        );
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("body bytes");
+        let body = std::str::from_utf8(&body).expect("utf8");
+        assert!(
+            !body.starts_with('"'),
+            "wallet expects raw compact JWT, not a JSON-encoded string"
+        );
+        assert_eq!(body.split('.').count(), 3);
     }
 
     #[test]

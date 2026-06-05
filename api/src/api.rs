@@ -5,8 +5,8 @@ use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
 use crate::validation::{is_valid_handle, is_valid_location};
 use axum::body::{Body, Bytes};
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
-use axum::http::HeaderMap;
+use axum::extract::{DefaultBodyLimit, Extension, Multipart, OriginalUri, Path, State};
+use axum::http::{HeaderMap, Uri};
 use axum::http::StatusCode;
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
 use axum::response::IntoResponse;
@@ -80,6 +80,23 @@ pub fn build_router(state: AppState) -> Router {
         .layer(middleware::from_fn(log_requests))
         .layer(CorsLayer::permissive())
         .with_state(state)
+}
+
+fn full_request_url(uri: &Uri, headers: &HeaderMap) -> String {
+    let scheme = headers
+        .get("x-forwarded-proto")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("http");
+    let host = headers
+        .get("x-forwarded-host")
+        .or_else(|| headers.get("host"))
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("localhost");
+    let path_and_query = uri
+        .path_and_query()
+        .map(|path_and_query| path_and_query.as_str())
+        .unwrap_or_else(|| uri.path());
+    format!("{scheme}://{host}{path_and_query}")
 }
 
 async fn log_requests(request: axum::http::Request<Body>, next: Next) -> Response {
@@ -437,10 +454,31 @@ async fn wallet_presentation_start(
 async fn wallet_presentation_response(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
+    OriginalUri(uri): OriginalUri,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Json<serde_json::Value>, EudiPresentationError> {
-    tracing::info!("POST /wallet/presentation/response/{session_id}");
+    let url = full_request_url(&uri, &headers);
+    let body_text = String::from_utf8_lossy(&body);
+    let headers_log: Vec<String> = headers
+        .iter()
+        .map(|(name, value)| {
+            format!(
+                "{}: {}",
+                name,
+                value.to_str().unwrap_or("<non-utf8>")
+            )
+        })
+        .collect();
+
+    tracing::info!(
+        %session_id,
+        %url,
+        headers = ?headers_log,
+        body = %body_text,
+        "POST /wallet/presentation/response"
+    );
+
     let redirect = state
         .eudi
         .accept_wallet_response(session_id, &headers, &body)?;
