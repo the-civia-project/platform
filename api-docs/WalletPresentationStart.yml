@@ -6,9 +6,9 @@ info:
 docs: |-
   Wallet dereferences this URL as `request_uri` (GET).
 
-  Returns a signed OpenID4VP authorization request (JAR) per the German EUDI
-  PID presentation guide §3.1: `application/json`, `Cache-Control: no-store`,
-  body is a JSON string containing the compact JWT.
+  Returns a signed OpenID4VP authorization request (JAR) per RFC 9101 /
+  OpenID4VP: `application/oauth-authz-req+jwt`, `Cache-Control: no-store`,
+  body is the compact JWT (not JSON-wrapped).
 
 http:
   method: GET
@@ -29,9 +29,9 @@ examples:
       status: 200
       headers:
         - name: Content-Type
-          value: application/json
+          value: application/oauth-authz-req+jwt
         - name: Cache-Control
           value: no-store
       body:
         type: text
-        data: '"eyJhbGciOiJFUzI1NiIsInR5cCI6Im9hdXRoLWF1dGh6LXJlcStqd3QiLCJ4NWMiOlsi…"],"eXp…"'
+        data: eyJhbGciOiJFUzI1NiIsInR5cCI6Im9hdXRoLWF1dGh6LXJlcStqd3QiLCJ4NWMiOlsi…"],"eXp…
