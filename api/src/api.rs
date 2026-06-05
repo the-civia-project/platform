@@ -2,9 +2,10 @@ use crate::db::database::{CountryNumericCode, Database, country_display_name};
 use crate::db::user::{CreateUser, User, ValidationType};
 use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
 use crate::validation::{is_valid_handle, is_valid_location};
-use axum::body::Body;
+use axum::body::{Body, Bytes};
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
+use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, RawQuery, State};
+use axum::http::HeaderMap;
 use axum::http::StatusCode;
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
 use axum::response::IntoResponse;
@@ -49,6 +50,14 @@ pub fn build_router(state: AppState) -> Router {
     let public = Router::new()
         .route("/health", get(health))
         .route("/media/avatars/{*key}", get(serve_avatar))
+        .route(
+            "/wallet/presentation/start/{session_id}",
+            get(wallet_presentation_start),
+        )
+        .route(
+            "/presentation/complete/{session_id}",
+            get(presentation_complete).post(presentation_complete),
+        )
         .layer(DefaultBodyLimit::max(6 * 1024 * 1024));
 
     let protected = Router::new()
@@ -119,7 +128,7 @@ pub enum ApiError {
 
 #[derive(Deserialize)]
 struct RegisterPayload {
-    citizen_of: Vec<i32>,
+    citizen_of: Option<Vec<i32>>,
     handle: Option<String>,
     location: Option<String>,
     avatar_key: Option<String>,
@@ -161,10 +170,6 @@ struct AvatarUploadResponse {
 }
 
 fn parse_citizen_of(codes: Vec<i32>) -> Result<Vec<CountryNumericCode>, StatusCode> {
-    if codes.is_empty() {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-
     codes
         .into_iter()
         .map(|code| CountryNumericCode::try_new(code).ok_or(StatusCode::BAD_REQUEST))
@@ -192,20 +197,23 @@ fn parse_handle(handle: Option<String>) -> Result<Option<String>, StatusCode> {
 fn resolve_location(
     location: Option<String>,
     citizen_of: &[CountryNumericCode],
-) -> Result<String, StatusCode> {
+) -> Result<Option<String>, StatusCode> {
     if let Some(raw) = location {
         let trimmed = raw.trim();
         if !trimmed.is_empty() {
             if !is_valid_location(trimmed) {
                 return Err(StatusCode::BAD_REQUEST);
             }
-            return Ok(trimmed.to_string());
+            return Ok(Some(trimmed.to_string()));
         }
     }
 
-    let code = citizen_of.first().ok_or(StatusCode::BAD_REQUEST)?;
+    let Some(code) = citizen_of.first() else {
+        return Ok(None);
+    };
+
     country_display_name(code.code())
-        .map(|name| name.to_string())
+        .map(|name| Some(name.to_string()))
         .ok_or(StatusCode::BAD_REQUEST)
 }
 
@@ -236,7 +244,7 @@ async fn register(
         };
     }
 
-    let citizen_of = parse_citizen_of(payload.citizen_of).map_err(|status| {
+    let citizen_of = parse_citizen_of(payload.citizen_of.unwrap_or_default()).map_err(|status| {
         tracing::warn!(clerk_sub = %clerk_jwt.sub, "POST /register: invalid citizen_of");
         status
     })?;
@@ -247,7 +255,6 @@ async fn register(
         tracing::warn!(clerk_sub = %clerk_jwt.sub, "POST /register: invalid location");
         status
     })?;
-    let location = Some(location);
 
     let create_user = CreateUser {
         validation_type: ValidationType::Clerk,
@@ -408,6 +415,72 @@ async fn upload_avatar(
 
 async fn health() -> Json<serde_json::Value> {
     Json(json!({ "status": "ok" }))
+}
+
+#[derive(Serialize)]
+struct PresentationStartResponse {
+    redirect_uri: String,
+}
+
+fn eudi_verifier_public_base_url() -> String {
+    std::env::var("EUDI_VERIFIER_PUBLIC_URL")
+        .or_else(|_| std::env::var("EXPO_PUBLIC_EUDI_VERIFIER_URL"))
+        .unwrap_or_else(|_| "http://platform.localhost:3001".into())
+        .trim_end_matches('/')
+        .to_string()
+}
+
+fn presentation_complete_redirect_uri(session_id: Uuid) -> String {
+    format!(
+        "{}/presentation/complete/{}",
+        eudi_verifier_public_base_url(),
+        session_id
+    )
+}
+
+#[tracing::instrument(fields(%session_id))]
+async fn wallet_presentation_start(
+    Path(session_id): Path<Uuid>,
+) -> Json<PresentationStartResponse> {
+    tracing::info!("GET /wallet/presentation/start/{session_id}");
+
+    Json(PresentationStartResponse {
+        redirect_uri: presentation_complete_redirect_uri(session_id),
+    })
+}
+
+fn request_body_as_json(body: &Bytes) -> serde_json::Value {
+    if body.is_empty() {
+        return json!(null);
+    }
+    if let Ok(value) = serde_json::from_slice(body) {
+        return value;
+    }
+    json!(String::from_utf8_lossy(body))
+}
+
+#[tracing::instrument(fields(%session_id), skip(headers, body))]
+async fn presentation_complete(
+    Path(session_id): Path<Uuid>,
+    RawQuery(query): RawQuery,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Json<serde_json::Value> {
+    let content_type = headers
+        .get(CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_string);
+
+    let payload = json!({
+        "session_id": session_id,
+        "query": query,
+        "content_type": content_type,
+        "body": request_body_as_json(&body),
+    });
+
+    tracing::info!(payload = %payload, "presentation complete");
+
+    Json(payload)
 }
 
 #[tracing::instrument(skip(app_state), fields(%key))]

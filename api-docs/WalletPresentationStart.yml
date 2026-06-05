@@ -1,0 +1,34 @@
+info:
+  name: WalletPresentationStart
+  type: http
+  seq: 3
+
+docs: |-
+  Starts a cross-device EUDI wallet presentation for the given session id
+  (typically the platform user UUID).
+
+  Returns the verifier URL the wallet should redirect to after presentation.
+
+http:
+  method: GET
+  url: "{{PLATFORM_API_URL}}/wallet/presentation/start/{{USER_ID}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: presentation start
+    request:
+      url: "{{PLATFORM_API_URL}}/wallet/presentation/start/550e8400-e29b-41d4-a716-446655440000"
+    response:
+      status: 200
+      body:
+        type: json
+        data: |-
+          {
+            "redirect_uri": "https://platform.theciviaproject.org/presentation/complete/550e8400-e29b-41d4-a716-446655440000"
+          }

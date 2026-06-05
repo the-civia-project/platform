@@ -1,0 +1,56 @@
+info:
+  name: PresentationComplete
+  type: http
+  seq: 4
+
+docs: |-
+  Wallet redirect target after cross-device presentation.
+
+  Stub handler: logs the incoming query string and body, then echoes them
+  back as JSON. Accepts GET (query params) and POST (body).
+
+http:
+  method: POST
+  url: "{{PLATFORM_API_URL}}/presentation/complete/{{USER_ID}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "vp_token": "eyJ…",
+        "presentation_submission": {}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: echo presentation payload
+    request:
+      url: "{{PLATFORM_API_URL}}/presentation/complete/550e8400-e29b-41d4-a716-446655440000?state=abc"
+      method: POST
+      body:
+        type: json
+        data: |-
+          {
+            "vp_token": "eyJ…"
+          }
+    response:
+      status: 200
+      body:
+        type: json
+        data: |-
+          {
+            "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            "query": "state=abc",
+            "content_type": "application/json",
+            "body": {
+              "vp_token": "eyJ…"
+            }
+          }
