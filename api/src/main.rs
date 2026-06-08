@@ -1,14 +1,15 @@
 mod api;
 mod db;
-mod eudi_presentation;
 mod random;
 mod storage;
 mod validation;
 
-use crate::api::{clerk_from_env, start_api, AppState};
-use crate::eudi_presentation::EudiPresentationService;
+use crate::api::api::{AppState, start_api};
+use crate::api::eudi_presentation::EudiPresentationService;
 use crate::db::database::Database;
 use crate::storage::AvatarStore;
+use clerk_rs::ClerkConfiguration;
+use clerk_rs::clerk::Clerk;
 
 fn load_env() {
     let _ = dotenvy::dotenv();
@@ -59,7 +60,9 @@ async fn main() {
         Ok(service) => service,
         Err(err) => {
             eprintln!("EUDI presentation setup failed: {err}");
-            eprintln!("Set EUDI_ACCESS_CERT_PATH + EUDI_ACCESS_CERT_KEY_PATH, or EUDI_DEV_INSECURE_SIGNING=1 for local dev.");
+            eprintln!(
+                "Set EUDI_ACCESS_CERT_PATH + EUDI_ACCESS_CERT_KEY_PATH, or EUDI_DEV_INSECURE_SIGNING=1 for local dev."
+            );
             std::process::exit(1);
         }
     };
@@ -71,4 +74,10 @@ async fn main() {
         eudi,
     })
     .await;
+}
+
+pub fn clerk_from_env() -> Clerk {
+    let secret = std::env::var("CLERK_SECRET_KEY").expect("CLERK_SECRET_KEY must be set");
+    let config = ClerkConfiguration::new(None, None, Some(secret), None);
+    Clerk::new(config)
 }

@@ -1,25 +1,25 @@
-use crate::db::database::{CountryNumericCode, Database, country_display_name};
+use crate::api::common::{parse_citizen_of, resolve_location};
+use crate::api::eudi_presentation::EudiPresentationService;
+use crate::api::wallet::build_wallet_router;
+use crate::db::database::{CountryNumericCode, Database};
 use crate::db::user::{CreateUser, User, ValidationType};
-use crate::eudi_presentation::{
-    EudiPresentationError, EudiPresentationService, PresentationStatus,
-};
-use crate::storage::{AvatarStore, avatar_public_url, validate_avatar_key};
-use crate::validation::{is_valid_handle, is_valid_location};
-use axum::body::{Body, Bytes};
+use crate::storage::{avatar_public_url, validate_avatar_key, AvatarStore};
+use crate::validation::is_valid_handle;
+
+use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{DefaultBodyLimit, Extension, Multipart, OriginalUri, Path, State};
-use axum::http::StatusCode;
+use axum::extract::{DefaultBodyLimit, Extension, Multipart, Path, State};
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE};
+use axum::http::StatusCode;
 use axum::http::{HeaderMap, Uri};
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum::{
-    Json, Router,
-    middleware::{self, Next},
-    routing::{delete, get, post},
+    middleware::{self, Next}, routing::{delete, get, post},
+    Json,
+    Router,
 };
 use axum_extra::extract::WithRejection;
-use clerk_rs::ClerkConfiguration;
 use clerk_rs::apis::users_api::User as ClerkUsersApi;
 use clerk_rs::clerk::Clerk;
 use clerk_rs::validators::authorizer::ClerkJwt;
@@ -39,6 +39,16 @@ pub struct AppState {
     pub eudi: EudiPresentationService,
 }
 
+pub async fn start_api(state: AppState) {
+    let app = build_router(state);
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
+
+    tracing::debug!("listening on {}", listener.local_addr().unwrap());
+
+    axum::serve(listener, app).await.unwrap();
+}
+
 pub fn build_router(state: AppState) -> Router {
     let clerk_layer = ClerkLayer::new(
         MemoryCacheJwksProvider::new(state.clerk.clone()),
@@ -53,20 +63,9 @@ pub fn build_router(state: AppState) -> Router {
 
     let public = Router::new()
         .route("/health", get(health))
-        .route("/media/avatars/{*key}", get(serve_avatar))
-        .route(
-            "/wallet/presentation/start/{session_id}",
-            get(wallet_presentation_start),
-        )
-        .route(
-            "/wallet/presentation/response/{session_id}",
-            post(wallet_presentation_response),
-        )
-        .route(
-            "/wallet/presentation/complete/{session_id}",
-            get(presentation_complete),
-        )
-        .layer(DefaultBodyLimit::max(6 * 1024 * 1024));
+        .route("/media/avatars/{*key}", get(serve_avatar));
+
+    let wallet = build_wallet_router();
 
     let protected = Router::new()
         .route("/register", post(register))
@@ -78,6 +77,7 @@ pub fn build_router(state: AppState) -> Router {
 
     Router::new()
         .merge(public)
+        .merge(wallet)
         .merge(protected)
         .layer(middleware::from_fn(log_requests))
         .layer(CorsLayer::permissive())
@@ -115,16 +115,6 @@ async fn log_requests(request: axum::http::Request<Body>, next: Next) -> Respons
     tracing::info!("{} {} {}", method, target, response.status().as_u16());
 
     response
-}
-
-pub async fn start_api(state: AppState) {
-    let app = build_router(state);
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
-
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
-
-    axum::serve(listener, app).await.unwrap();
 }
 
 impl IntoResponse for ApiError {
@@ -194,13 +184,6 @@ struct AvatarUploadResponse {
     avatar_url: String,
 }
 
-fn parse_citizen_of(codes: Vec<i32>) -> Result<Vec<CountryNumericCode>, StatusCode> {
-    codes
-        .into_iter()
-        .map(|code| CountryNumericCode::try_new(code).ok_or(StatusCode::BAD_REQUEST))
-        .collect()
-}
-
 fn parse_avatar_key(key: Option<String>) -> Result<Option<String>, StatusCode> {
     let Some(key) = key else {
         return Ok(None);
@@ -217,29 +200,6 @@ fn parse_handle(handle: Option<String>) -> Result<Option<String>, StatusCode> {
         return Err(StatusCode::BAD_REQUEST);
     }
     Ok(Some(handle))
-}
-
-fn resolve_location(
-    location: Option<String>,
-    citizen_of: &[CountryNumericCode],
-) -> Result<Option<String>, StatusCode> {
-    if let Some(raw) = location {
-        let trimmed = raw.trim();
-        if !trimmed.is_empty() {
-            if !is_valid_location(trimmed) {
-                return Err(StatusCode::BAD_REQUEST);
-            }
-            return Ok(Some(trimmed.to_string()));
-        }
-    }
-
-    let Some(code) = citizen_of.first() else {
-        return Ok(None);
-    };
-
-    country_display_name(code.code())
-        .map(|name| Some(name.to_string()))
-        .ok_or(StatusCode::BAD_REQUEST)
 }
 
 #[tracing::instrument(
@@ -443,119 +403,6 @@ async fn health() -> Json<serde_json::Value> {
     Json(json!({ "status": "ok" }))
 }
 
-#[tracing::instrument(fields(%session_id), skip(state))]
-async fn wallet_presentation_start(
-    State(state): State<AppState>,
-    Path(session_id): Path<Uuid>,
-) -> Result<Response, EudiPresentationError> {
-    tracing::info!("GET /wallet/presentation/start/{session_id}");
-    state.eudi.jar_http_response(session_id)
-}
-
-#[tracing::instrument(fields(%session_id), skip(state, headers, body))]
-async fn wallet_presentation_response(
-    State(state): State<AppState>,
-    Path(session_id): Path<Uuid>,
-    OriginalUri(uri): OriginalUri,
-    headers: HeaderMap,
-    body: Bytes,
-) -> Result<Json<serde_json::Value>, EudiPresentationError> {
-    let url = full_request_url(&uri, &headers);
-    let body_text = String::from_utf8_lossy(&body);
-    let headers_log: Vec<String> = headers
-        .iter()
-        .map(|(name, value)| format!("{}: {}", name, value.to_str().unwrap_or("<non-utf8>")))
-        .collect();
-
-    tracing::info!(
-        %session_id,
-        %url,
-        headers = ?headers_log,
-        body = %body_text,
-        "POST /wallet/presentation/response"
-    );
-
-    state
-        .eudi
-        .accept_wallet_response(session_id, &headers, &body)?;
-
-    // Session id is the platform user id (see apps/ui eudi presentation request URI).
-    let citizen_of = parse_citizen_of(vec![276]).map_err(|_| {
-        EudiPresentationError::Internal("Germany country code misconfigured".into())
-    })?;
-
-    match state
-        .db
-        .update_user_citizen_of(session_id, citizen_of)
-        .await
-    {
-        Ok(()) => tracing::info!(
-            user_id = %session_id,
-            citizen_of = 276,
-            "wallet response: set user citizenship to Germany"
-        ),
-        Err(sqlx::Error::RowNotFound) => tracing::warn!(
-            user_id = %session_id,
-            "wallet response: platform user not found for citizenship update"
-        ),
-        Err(err) => {
-            tracing::error!(
-                error = %err,
-                user_id = %session_id,
-                "wallet response: failed to update citizenship"
-            );
-            return Err(EudiPresentationError::Internal(err.to_string()));
-        }
-    }
-
-    Ok(Json(json!({})))
-}
-
-#[tracing::instrument(fields(%session_id), skip(state, headers, body))]
-async fn presentation_complete(
-    State(state): State<AppState>,
-    Path(session_id): Path<Uuid>,
-    OriginalUri(uri): OriginalUri,
-    headers: HeaderMap,
-    body: Bytes,
-) -> Result<impl IntoResponse, EudiPresentationError> {
-    let url = full_request_url(&uri, &headers);
-    let body_text = String::from_utf8_lossy(&body);
-    let headers_log: Vec<String> = headers
-        .iter()
-        .map(|(name, value)| format!("{}: {}", name, value.to_str().unwrap_or("<non-utf8>")))
-        .collect();
-
-    tracing::info!(
-        %session_id,
-        %url,
-        headers = ?headers_log,
-        body = %body_text,
-        "GET /wallet/presentation/complete"
-    );
-
-    let view = state.eudi.complete_view(session_id)?;
-    let status = match view.status {
-        PresentationStatus::Pending => "pending",
-        PresentationStatus::ResponseReceived => "response_received",
-        PresentationStatus::Verified => "verified",
-        PresentationStatus::Failed => "failed",
-    };
-    let response_body = json!({
-        "session_id": view.session_id,
-        "status": status,
-        "failure_reason": view.failure_reason,
-    });
-    match view.status {
-        PresentationStatus::Pending | PresentationStatus::ResponseReceived => {
-            Ok(StatusCode::NO_CONTENT.into_response())
-        }
-        PresentationStatus::Verified | PresentationStatus::Failed => {
-            Ok((StatusCode::OK, Json(response_body)).into_response())
-        }
-    }
-}
-
 #[tracing::instrument(skip(app_state), fields(%key))]
 async fn serve_avatar(
     State(app_state): State<AppState>,
@@ -574,10 +421,4 @@ async fn serve_avatar(
         .header(CACHE_CONTROL, "public, max-age=86400")
         .body(Body::from(stored.bytes))
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-}
-
-pub fn clerk_from_env() -> Clerk {
-    let secret = std::env::var("CLERK_SECRET_KEY").expect("CLERK_SECRET_KEY must be set");
-    let config = ClerkConfiguration::new(None, None, Some(secret), None);
-    Clerk::new(config)
 }

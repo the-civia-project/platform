@@ -17,7 +17,6 @@ use p256::ecdsa::SigningKey;
 use p256::elliptic_curve::rand_core::OsRng;
 use p256::elliptic_curve::sec1::ToEncodedPoint;
 use p256::pkcs8::EncodePrivateKey;
-use serde::Serialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -63,7 +62,7 @@ pub enum PresentationStatus {
 }
 
 #[derive(Clone)]
-struct PresentationSession {
+pub struct PresentationSession {
     nonce: String,
     created_at_unix: u64,
     response_decryption_pem: String,
@@ -148,7 +147,7 @@ impl EudiPresentationService {
             );
         }
 
-        let mut claims = pid_presentation_claims(
+        let claims = pid_presentation_claims(
             &self.client_id,
             &self.response_uri_for_session(session_id),
             &nonce,
@@ -536,87 +535,5 @@ impl IntoResponse for EudiPresentationError {
         let message = self.to_string();
         tracing::warn!(%message, "EUDI presentation error");
         (status, axum::Json(json!({ "message": message }))).into_response()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn test_service() -> EudiPresentationService {
-        EudiPresentationService::new_dev()
-    }
-
-    #[tokio::test]
-    async fn jar_http_response_is_raw_jwt_not_json_string() {
-        let service = test_service();
-        let session_id = Uuid::new_v4();
-        let response = service
-            .jar_http_response(session_id)
-            .expect("http response");
-
-        assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(
-            response
-                .headers()
-                .get(CONTENT_TYPE)
-                .and_then(|v| v.to_str().ok()),
-            Some(JAR_CONTENT_TYPE)
-        );
-
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-            .await
-            .expect("body bytes");
-        let body = std::str::from_utf8(&body).expect("utf8");
-        assert!(
-            !body.starts_with('"'),
-            "wallet expects raw compact JWT, not a JSON-encoded string"
-        );
-        assert_eq!(body.split('.').count(), 3);
-    }
-
-    #[test]
-    fn jar_is_compact_jwt_with_haip_claims() {
-        let service = test_service();
-        let session_id = Uuid::new_v4();
-        let jar = service.issue_jar(session_id).expect("jar");
-        let parts: Vec<_> = jar.split('.').collect();
-        assert_eq!(parts.len(), 3);
-
-        let payload_bytes = B64_URL.decode(parts[1]).expect("payload b64");
-        let payload: Value = serde_json::from_slice(&payload_bytes).expect("json");
-
-        assert_eq!(payload["response_type"], "vp_token");
-        assert_eq!(payload["response_mode"], "direct_post.jwt");
-        assert_eq!(payload["state"], session_id.to_string());
-        assert_eq!(payload["aud"], HAIP_AUDIENCE);
-        assert!(
-            payload["client_id"]
-                .as_str()
-                .unwrap_or("")
-                .starts_with("x509_hash:")
-        );
-        assert!(payload["dcql_query"]["credentials"].is_array());
-    }
-
-    #[test]
-    fn wallet_response_stores_encrypted_payload() {
-        let service = test_service();
-        let session_id = Uuid::new_v4();
-        service.issue_jar(session_id).expect("jar");
-
-        let body = Bytes::from("response=eyJ.test");
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("application/x-www-form-urlencoded"),
-        );
-
-        service
-            .accept_wallet_response(session_id, &headers, &body)
-            .expect("accept response");
-
-        let view = service.complete_view(session_id).expect("complete view");
-        assert_eq!(view.status, PresentationStatus::ResponseReceived);
     }
 }

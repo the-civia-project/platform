@@ -86,7 +86,10 @@ impl Database {
     ) -> Result<Uuid, sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 
-        let label = user.tag_label.clone().unwrap_or_else(generate_user_tag_label);
+        let label = user
+            .tag_label
+            .clone()
+            .unwrap_or_else(generate_user_tag_label);
 
         let discriminator_record = sqlx::query!(
             r#"

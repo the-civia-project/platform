@@ -31,8 +31,8 @@ pub struct StoredAvatar {
 }
 
 fn require_env(name: &str) -> Result<String, AvatarStoreError> {
-    let value = std::env::var(name)
-        .map_err(|_| AvatarStoreError::Config(format!("{name} must be set")))?;
+    let value =
+        std::env::var(name).map_err(|_| AvatarStoreError::Config(format!("{name} must be set")))?;
     let value = value.trim().to_owned();
     if value.is_empty() {
         return Err(AvatarStoreError::Config(format!("{name} must be set")));
@@ -66,7 +66,9 @@ impl AvatarStore {
             .trim()
             .to_owned();
         if bucket_name.is_empty() {
-            return Err(AvatarStoreError::Config("S3_AVATAR_BUCKET must be set".into()));
+            return Err(AvatarStoreError::Config(
+                "S3_AVATAR_BUCKET must be set".into(),
+            ));
         }
 
         let region = Region::Custom {
@@ -169,7 +171,9 @@ impl AvatarStore {
 
 pub fn validate_avatar_key(key: &str) -> Result<(), AvatarStoreError> {
     if !key.starts_with("avatars/") {
-        return Err(AvatarStoreError::Storage("invalid avatar key prefix".into()));
+        return Err(AvatarStoreError::Storage(
+            "invalid avatar key prefix".into(),
+        ));
     }
     if key.contains("..") || key.contains('\\') {
         return Err(AvatarStoreError::Storage("invalid avatar key".into()));
@@ -178,7 +182,9 @@ pub fn validate_avatar_key(key: &str) -> Result<(), AvatarStoreError> {
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || c == '/' || c == '.' || c == '_' || c == '-')
     {
-        return Err(AvatarStoreError::Storage("invalid avatar key charset".into()));
+        return Err(AvatarStoreError::Storage(
+            "invalid avatar key charset".into(),
+        ));
     }
     Ok(())
 }

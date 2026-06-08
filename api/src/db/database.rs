@@ -45,9 +45,8 @@ pub fn country_display_name(code: i32) -> Option<&'static str> {
 }
 
 fn resolve_database_url() -> String {
-    let url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-        "postgres://postgres:postgres@localhost:5432/postgres".to_string()
-    });
+    let url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/postgres".to_string());
     let trimmed = url.trim_end_matches('/');
     if trimmed.ends_with(":5432") {
         format!("{trimmed}/postgres")

@@ -20,9 +20,10 @@ mod tests {
     fn manifest_handle_words_are_lowercase_identifiers() {
         for word in HANDLE_ADJECTIVES.iter().chain(HANDLE_ANIMALS.iter()) {
             assert!(!word.is_empty());
-            assert!(word
-                .chars()
-                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'));
+            assert!(
+                word.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+            );
             assert!(word.as_bytes()[0].is_ascii_lowercase());
         }
     }
